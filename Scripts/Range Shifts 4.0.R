@@ -1,11 +1,12 @@
 library(vegan)
-library(plotrix)
+library(ggplot2)
 library(RColorBrewer)
+library(dplyr)
 
 source("./Functions/predict_err.r")
 
 dispV<-c(0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.5,1)
-reps<-50
+reps<-2
 dd<-c(0.3,0.2,0.1)#kernel decay strength
 FoodWeb<-c("NoInt","Comp","Mixed","Plants","Herb","Pred") 
 
@@ -164,217 +165,56 @@ for(r in 1:reps){
       MeanInteract[l,,4]<-rowMeans(B31%*%X3[,l,])
       #print(l)
     }
+    Turnover.df.temp<-rbind(Com_compare(X,Int_type = "None",Trophic = "No"),
+                            Com_compare(XI,Int_type = "Competitive",Trophic = "No"),
+                            Com_compare(XM,Int_type = "Mixed",Trophic = "No"),
+                            Com_compare(X3[preyV,,],Int_type = "Plants",Trophic = "Yes"),
+                            Com_compare(X3[pred1V,,],Int_type = "Herbivores",Trophic = "Yes"),
+                            Com_compare(X3[pred2V,,],Int_type = "Predators",Trophic = "Yes"))
     
     
-    Envelope<-X[,burnL,51:100]
-    EnvelopeI<-XI[,burnL,51:100]
-    Envelope3<-X3[,burnL,51:100]
-    EnvelopeM<-XM[,burnL,51:100]
-    Shift<-X[,length(StressV),101:150]
-    ShiftI<-XI[,length(StressV),101:150]
-    Shift3<-X3[,length(StressV),101:150]
-    ShiftM<-XM[,length(StressV),101:150]
+    Turnover.means.temp<-Turnover.df.temp%>%
+      group_by(F_patch,I_patch,Interactions,Dispersal,Trophic)%>%
+      mutate(Total_turnover=max(Turnover))%>%
+      group_by(F_patch,Interactions,Dispersal,Trophic)%>%
+      filter(Total_turnover==min(Total_turnover))%>%
+      group_by(Type,Interactions,Dispersal,Trophic)%>%
+      summarise(Turnover=mean(Turnover),Distance=mean(F_patch-I_patch))
     
-    #Turnover####
-    Turnover[r,d,"NoInt","Pre"]<-mean(colSums(Envelope>0))
-    Turnover[r,d,"NoInt","Post"]<-mean(colSums(Shift>0))
-    Turnover[r,d,"NoInt","Ext"]<-mean(colSums(Envelope>0 & Shift==0))
-    Turnover[r,d,"NoInt","Loc_ext"]<-mean(colSums(Envelope>0 & rep(rowSums(Shift)>0,50)  & Shift==0))
-    Turnover[r,d,"NoInt","Novel"]<-mean(colSums(Envelope==0 & Shift>0))
-    
-    Turnover[r,d,"Comp","Pre"]<-mean(colSums(EnvelopeI>0))
-    Turnover[r,d,"Comp","Post"]<-mean(colSums(ShiftI>0))
-    Turnover[r,d,"Comp","Ext"]<-mean(colSums(EnvelopeI>0 & ShiftI==0))
-    Turnover[r,d,"Comp","Loc_ext"]<-mean(colSums(EnvelopeI>0 & rep(rowSums(ShiftI)>0,50)  & ShiftI==0))
-    Turnover[r,d,"Comp","Novel"]<-mean(colSums(EnvelopeI==0 & ShiftI>0))
-    
-    Turnover[r,d,"Mixed","Pre"]<-mean(colSums(EnvelopeM>0))
-    Turnover[r,d,"Mixed","Post"]<-mean(colSums(ShiftM>0))
-    Turnover[r,d,"Mixed","Ext"]<-mean(colSums(EnvelopeM>0 & ShiftM==0))
-    Turnover[r,d,"Mixed","Loc_ext"]<-mean(colSums(EnvelopeM>0 & rep(rowSums(ShiftM)>0,50)  & ShiftM==0))
-    Turnover[r,d,"Mixed","Novel"]<-mean(colSums(EnvelopeM==0 & ShiftM>0))
-    
-    Turnover[r,d,"Plants","Pre"]<-mean(colSums(Envelope3[preyV,]>0))
-    Turnover[r,d,"Plants","Post"]<-mean(colSums(Shift3[preyV,]>0))
-    Turnover[r,d,"Plants","Ext"]<-mean(colSums(Envelope3[preyV,]>0 & Shift3[preyV,]==0))
-    Turnover[r,d,"Plants","Loc_ext"]<-mean(colSums(Envelope3[preyV,]>0 & rep(rowSums(Shift3[preyV,])>0,50)  & Shift3[preyV,]==0))
-    Turnover[r,d,"Plants","Novel"]<-mean(colSums(Envelope3[preyV,]==0 & Shift3[preyV,]>0))
-    
-    Turnover[r,d,"Herb","Pre"]<-mean(colSums(Envelope3[pred1V,]>0))
-    Turnover[r,d,"Herb","Post"]<-mean(colSums(Shift3[pred1V,]>0))
-    Turnover[r,d,"Herb","Ext"]<-mean(colSums(Envelope3[pred1V,]>0 & Shift3[pred1V,]==0))
-    Turnover[r,d,"Herb","Loc_ext"]<-mean(colSums(Envelope3[pred1V,]>0 & rep(rowSums(Shift3[pred1V,])>0,50)  & Shift3[pred1V,]==0))
-    Turnover[r,d,"Herb","Novel"]<-mean(colSums(Envelope3[pred1V,]==0 & Shift3[pred1V,]>0))
-    
-    Turnover[r,d,"Pred","Pre"]<-mean(colSums(Envelope3[pred2V,]>0))
-    Turnover[r,d,"Pred","Post"]<-mean(colSums(Shift3[pred2V,]>0))
-    Turnover[r,d,"Pred","Ext"]<-mean(colSums(Envelope3[pred2V,]>0 & Shift3[pred2V,]==0))
-    Turnover[r,d,"Pred","Loc_ext"]<-mean(colSums(Envelope3[pred2V,]>0 & rep(rowSums(Shift3[pred2V,])>0,50)  & Shift3[pred2V,]==0))
-    Turnover[r,d,"Pred","Novel"]<-mean(colSums(Envelope3[pred2V,]==0 & Shift3[pred2V,]>0))
+    #calculate speed and variability of range shift
+    rShift.df_temp<-rbind(rSpeedVary(X,Int_type = "None",Trophic = "No"),
+                          rSpeedVary(XI,Int_type = "Competitive",Trophic = "No"),
+                          rSpeedVary(XM,Int_type = "Mixed",Trophic = "No"),
+                          rSpeedVary(X3[preyV,,],Int_type = "Plants",Trophic = "Yes"),
+                          rSpeedVary(X3[pred1V,,],Int_type = "Herbivores",Trophic = "Yes"),
+                          rSpeedVary(X3[pred2V,,],Int_type = "Predators",Trophic = "Yes"))
     
     
-    #Interaction Strength
-    Int_Stength[,r,d,"NoInt"]<-colMeans(MeanInteract[2001:5000,,1])
-    Int_Stength[,r,d,"Comp"]<-colMeans(MeanInteract[2001:5000,,2])
-    Int_Stength[,r,d,"Mixed"]<-colMeans(MeanInteract[2001:5000,,3])
-    Int_Stength[preyV,r,d,"Plants"]<-colMeans(MeanInteract[2001:5000,preyV,4])
-    Int_Stength[pred1V,r,d,"Herb"]<-colMeans(MeanInteract[2001:5000,pred1V,4])
-    Int_Stength[pred2V,r,d,"Pred"]<-colMeans(MeanInteract[2001:5000,pred2V,4])
+    if(r==1 & d==1){
+      rShift.df<-rShift.df_temp
+      Turn_mean<-Turnover.means.temp
+    } else {rShift.df<-rbind(rShift.df,rShift.df_temp)
+    Turn_mean<-rbind(Turn_mean,Turnover.means.temp)}
     
-    #interspecific correlations
-    correlations_noint<-correlations_comp<-correlations_mixed<-c(cor(t(XM[,2000,])))
-    correlations_plants<-c(cor(t(X3[preyV,2000,])))
-    correlations_herb<-c(cor(t(X3[pred1V,2000,])))
-    correlations_pred<-c(cor(t(X3[pred2V,2000,])))
-    for(i in seq(2000,5000,length=100)){
-      correlations_noint<-rbind(correlations_noint,c(cor(t(X[,i,]))))
-      correlations_mixed<-rbind(correlations_mixed,c(cor(t(XM[,i,]))))
-      correlations_comp<-rbind(correlations_comp,c(cor(t(XI[,i,]))))
-      correlations_plants<-rbind(correlations_plants,c(cor(t(X3[preyV,i,]))))
-      correlations_herb<-rbind(correlations_herb,c(cor(t(X3[pred1V,i,]))))
-      correlations_pred<-rbind(correlations_pred,c(cor(t(X3[pred2V,i,]))))
-    }
-    correlations_noint<-correlations_noint[-1,]
-    correlations_mixed<-correlations_mixed[-1,]
-    correlations_comp<-correlations_comp[-1,]
-    correlations_plants<-correlations_plants[-1,]
-    correlations_herb<-correlations_herb[-1,]
-    correlations_pred<-correlations_pred[-1,]
-    
-    Cor_sd[,,r,d,"NoInt"]<-matrix(apply(correlations_noint,2,sd,na.rm=T),n,n)
-    diag(Cor_sd[,,r,d,"NoInt"])<-NA
-    Cor_sd[,,r,d,"Mixed"]<-matrix(apply(correlations_mixed,2,sd,na.rm=T),n,n)
-    diag(Cor_sd[,,r,d,"Mixed"])<-NA
-    Cor_sd[,,r,d,"Comp"]<-matrix(apply(correlations_comp,2,sd,na.rm=T),n,n)
-    diag(Cor_sd[,,r,d,"Comp"])<-NA
-    Cor_sd[preyV,preyV,r,d,"Plants"]<-matrix(apply(correlations_plants,2,sd,na.rm=T),nprey,nprey)
-    diag(Cor_sd[,,r,d,"Plants"])<-NA
-    Cor_sd[pred1V,pred1V,r,d,"Herb"]<-matrix(apply(correlations_herb,2,sd,na.rm=T),npred1,npred1)
-    diag(Cor_sd[,,r,d,"Herb"])<-NA
-    Cor_sd[pred2V,pred2V,r,d,"Pred"]<-matrix(apply(correlations_pred,2,sd,na.rm=T),npred2,npred2)
-    diag(Cor_sd[,,r,d,"Pred"])<-NA
-    
-    #variation in colonization rate####
-    speedV<-array(NA, dim=c(80,3000,6))
-    for(i in 1:3000){
-      speedV[,i,1]<-apply(X[,i+2000,51:150]>1,1,which.max)
-      speedV[,i,2]<-apply(XI[,i+2000,51:150]>1,1,which.max)
-      speedV[,i,3]<-apply(XM[,i+2000,51:150]>1,1,which.max)
-      speedV[preyV,i,4]<-apply(X3[preyV,i+2000,51:150]>1,1,which.max)
-      speedV[pred1V,i,5]<-apply(X3[pred1V,i+2000,51:150]>1,1,which.max)
-      speedV[pred2V,i,6]<-apply(X3[pred2V,i+2000,51:150]>1,1,which.max)
-    }
-    speedV[speedV==1]<-NA
-    speed_mean<-matrix(NA,80,6)
-    for(i in 1:80){
-      speed_mean[i,1]<-mean(table(speedV[i,,1])[-c(1:2,length(table(speedV[i,,1])))])
-      speed_mean[i,2]<-mean(table(speedV[i,,2])[-c(1:2,length(table(speedV[i,,2])))])
-      speed_mean[i,3]<-mean(table(speedV[i,,3])[-c(1:2,length(table(speedV[i,,3])))])
-      speed_mean[i,4]<-mean(table(speedV[i,,4])[-c(1:2,length(table(speedV[i,,4])))]) 
-      speed_mean[i,5]<-mean(table(speedV[i,,5])[-c(1:2,length(table(speedV[i,,5])))]) 
-      speed_mean[i,6]<-mean(table(speedV[i,,6])[-c(1:2,length(table(speedV[i,,6])))]) 
-    }
-    Shift.Speed[r,d,"NoInt"]<-sd(speed_mean[,1],na.rm=T)
-    Shift.Speed[r,d,"Comp"]<-sd(speed_mean[,2],na.rm=T)
-    Shift.Speed[r,d,"Mixed"]<-sd(speed_mean[,3],na.rm=T)
-    Shift.Speed[r,d,"Plants"]<-sd(speed_mean[,4],na.rm=T)
-    Shift.Speed[r,d,"Herb"]<-sd(speed_mean[,5],na.rm=T)
-    Shift.Speed[r,d,"Pred"]<-sd(speed_mean[,6],na.rm=T)
-    
-    
-    #Bray Curtis Similarity
-    BC_Dist3<-BC_Dist3_PA<-BC_DistM<-BC_DistR_PA<-BC_Dist_PA<-BC_DistI_PA<-BC_Dist<-BC_DistI<-NA
-    BC_DistM_PA<-BC_Dist_prey_PA<-BC_Dist_pred1_PA<-BC_Dist_pred2_PA<-BC_Dist_prey<-BC_Dist_pred1<-BC_Dist_pred2<-NA
-    for(com in 1:50){
-      BC_Dist[com]<-1-vegdist(rbind(Envelope[,com],Shift[,com]), binary=F)
-      BC_DistI[com]<-1-vegdist(rbind(EnvelopeI[,com],ShiftI[,com]), binary=F)
-      BC_DistM[com]<-1-vegdist(rbind(EnvelopeM[,com],ShiftM[,com]), binary=F)
-      BC_Dist_prey[com]<-1-vegdist(rbind(Envelope3[preyV,][,com],Shift3[preyV,][,com]), binary=F)
-      BC_Dist_pred1[com]<-1-vegdist(rbind(Envelope3[pred1V,][,com],Shift3[pred1V,][,com]), binary=F)
-      BC_Dist_pred2[com]<-1-vegdist(rbind(Envelope3[pred2V,][,com],Shift3[pred2V,][,com]), binary=F)
-      BC_Dist_PA[com]<-1-vegdist(rbind(Envelope[,com],Shift[,com]), binary=T)
-      BC_DistI_PA[com]<-1-vegdist(rbind(EnvelopeI[,com],ShiftI[,com]), binary=T)
-      BC_DistM_PA[com]<-1-vegdist(rbind(EnvelopeM[,com],ShiftM[,com]), binary=T)
-      BC_Dist_prey_PA[com]<-1-vegdist(rbind(Envelope3[preyV,][,com],Shift3[preyV,][,com]), binary=T)
-      BC_Dist_pred1_PA[com]<-1-vegdist(rbind(Envelope3[pred1V,][,com],Shift3[pred1V,][,com]), binary=T)
-      BC_Dist_pred2_PA[com]<-1-vegdist(rbind(Envelope3[pred2V,][,com],Shift3[pred2V,][,com]), binary=T)
-    }
-    Bray.Curt[r,d,"AB","NoInt"]<-mean(BC_Dist)
-    Bray.Curt[r,d,"AB","Comp"]<-mean(BC_DistI)
-    Bray.Curt[r,d,"AB","Mixed"]<-mean(BC_DistM)
-    Bray.Curt[r,d,"AB","Plants"]<-mean(BC_Dist_prey)
-    Bray.Curt[r,d,"AB","Herb"]<-mean(BC_Dist_pred1)
-    Bray.Curt[r,d,"AB","Pred"]<-mean(BC_Dist_pred2)
-    Bray.Curt[r,d,"PA","NoInt"]<-mean(BC_Dist_PA)
-    Bray.Curt[r,d,"PA","Comp"]<-mean(BC_DistI_PA)
-    Bray.Curt[r,d,"PA","Mixed"]<-mean(BC_DistM_PA)
-    Bray.Curt[r,d,"PA","Plants"]<-mean(BC_Dist_prey_PA)
-    Bray.Curt[r,d,"PA","Herb"]<-mean(BC_Dist_pred1_PA)
-    Bray.Curt[r,d,"PA","Pred"]<-mean(BC_Dist_pred2_PA)
-    
-    #Error rates
-    Error_Rates[r,d,,"NoInt"]<-unlist(predict_err(Envelope[,],Shift[,]))
-    Error_Rates[r,d,,"Comp"]<-unlist(predict_err(EnvelopeI[,],ShiftI[,]))
-    Error_Rates[r,d,,"Mixed"]<-unlist(predict_err(EnvelopeM[,],ShiftM[,]))
-    Error_Rates[r,d,,"Plants"]<-unlist(predict_err(Envelope3[preyV,],Shift3[preyV,]))
-    Error_Rates[r,d,,"Herb"]<-unlist(predict_err(Envelope3[pred1V,],Shift3[pred1V,]))
-    Error_Rates[r,d,,"Pred"]<-unlist(predict_err(Envelope3[pred2V,],Shift3[pred2V,]))
-    
-    #Extinction missorder
-    Extinct<-colSums(apply(X,1,rowSums)!=0)
-    ExtinctI<-colSums(apply(XI,1,rowSums)!=0)
-    Extinct3<-colSums(apply(X3,1,rowSums)!=0)
-    ExtinctM<-colSums(apply(XM,1,rowSums)!=0)
-    
-    Extinctprey<-Extinct3[preyV]
-    Extinctpred1<-Extinct3[pred1V]
-    Extinctpred2<-Extinct3[pred2V]
-    
-    Ext_Miss[r,d,"NoInt"]<-(sum(abs(seq(1:sum(Extinct>burnL))-order(Extinct[Extinct>burnL])))/2)/sum(Extinct>burnL)
-    Ext_Miss[r,d,"Comp"]<-(sum(abs(seq(1:sum(ExtinctI>burnL))-order(ExtinctI[ExtinctI>burnL])))/2)/sum(ExtinctI>burnL)
-    Ext_Miss[r,d,"Mixed"]<-(sum(abs(seq(1:sum(ExtinctM>burnL))-order(ExtinctM[ExtinctM>burnL])))/2)/sum(ExtinctM>burnL)
-    Ext_Miss[r,d,"Plants"]<-mean(abs(order(T_Opt3[Extinct3>burnL])-order(Extinct3[Extinct3>burnL]))[1:sum((Extinct3[preyV]>burnL))]/2)
-    Ext_Miss[r,d,"Herb"]<-mean(abs(order(T_Opt3[Extinct3>burnL])-order(Extinct3[Extinct3>burnL]))[(sum((Extinct3[preyV]>burnL))+1):sum((Extinct3[1:64]>burnL))]/2)
-    Ext_Miss[r,d,"Pred"]<-mean(abs(order(T_Opt3[Extinct3>burnL])-order(Extinct3[Extinct3>burnL]))[(sum((Extinct3[1:64]>burnL))+1):sum((Extinct3>burnL))]/2)
-    
-    Spatial.Insurance[r,d,"L.SR","NoInt"]<-mean(specnumber(t(X[,length(StressV),101:150])))/mean(specnumber(t(X[,burnL,51:100])))
-    Spatial.Insurance[r,d,"L.SR","Comp"]<-mean(specnumber(t(XI[,length(StressV),101:150])))/mean(specnumber(t(XI[,burnL,51:100])))
-    Spatial.Insurance[r,d,"L.SR","Mixed"]<-mean(specnumber(t(XM[,length(StressV),101:150])))/mean(specnumber(t(XM[,burnL,51:100])))
-    Spatial.Insurance[r,d,"L.SR","Plants"]<-mean(specnumber(t(X3[preyV,length(StressV),101:150])))/mean(specnumber(t(X3[preyV,burnL,51:100])))
-    Spatial.Insurance[r,d,"L.SR","Herb"]<-mean(specnumber(t(X3[pred1V,length(StressV),101:150])))/mean(specnumber(t(X3[pred1V,burnL,51:100])))
-    Spatial.Insurance[r,d,"L.SR","Pred"]<-mean(specnumber(t(X3[pred2V,length(StressV),101:150])))/mean(specnumber(t(X3[pred2V,burnL,51:100])))
-    
-    Spatial.Insurance[r,d,"R.SR","NoInt"]<-specnumber(rowSums(X[,length(StressV),101:150]))/specnumber(rowSums(X[,burnL,51:100]))
-    Spatial.Insurance[r,d,"R.SR","Comp"]<-specnumber(rowSums(XI[,length(StressV),101:150]))/specnumber(rowSums(XI[,burnL,51:100]))
-    Spatial.Insurance[r,d,"R.SR","Mixed"]<-specnumber(rowSums(XM[,length(StressV),101:150]))/specnumber(rowSums(XM[,burnL,51:100]))
-    Spatial.Insurance[r,d,"R.SR","Plants"]<-specnumber(rowSums(X3[preyV,length(StressV),101:150]))/specnumber(rowSums(X3[preyV,burnL,51:100]))
-    Spatial.Insurance[r,d,"R.SR","Herb"]<-specnumber(rowSums(X3[pred1V,length(StressV),101:150]))/specnumber(rowSums(X3[pred1V,burnL,51:100]))
-    Spatial.Insurance[r,d,"R.SR","Pred"]<-specnumber(rowSums(X3[pred2V,length(StressV),101:150]))/specnumber(rowSums(X3[pred2V,burnL,51:100]))
-    
-    Spatial.Insurance[r,d,"B.mass","NoInt"]<-mean(colSums(X[,length(StressV),101:150]))/mean(colSums(X[,burnL,51:100]))
-    Spatial.Insurance[r,d,"B.mass","Comp"]<-mean(colSums(XI[,length(StressV),101:150]))/mean(colSums(XI[,burnL,51:100]))
-    Spatial.Insurance[r,d,"B.mass","Mixed"]<-mean(colSums(XM[,length(StressV),101:150]))/mean(colSums(XM[,burnL,51:100]))
-    Spatial.Insurance[r,d,"B.mass","Plants"]<-mean(colSums(X3[preyV,length(StressV),101:150]))/mean(colSums(X3[preyV,burnL,51:100]))
-    Spatial.Insurance[r,d,"B.mass","Herb"]<-mean(colSums(X3[pred1V,length(StressV),101:150]))/mean(colSums(X3[pred1V,burnL,51:100]))
-    Spatial.Insurance[r,d,"B.mass","Pred"]<-mean(colSums(X3[pred2V,length(StressV),101:150]))/mean(colSums(X3[pred2V,burnL,51:100]))
-    
-    Spatial.Insurance[r,d,"L.CV","NoInt"]<-mean(apply(X[,(burnL+1):(burnL+Tmax),101:150],3,function(x){sd(x)/mean(x)}))
-    Spatial.Insurance[r,d,"L.CV","Comp"]<-mean(apply(XI[,(burnL+1):(burnL+Tmax),101:150],3,function(x){sd(x)/mean(x)}))
-    Spatial.Insurance[r,d,"L.CV","Mixed"]<-mean(apply(XM[,(burnL+1):(burnL+Tmax),101:150],3,function(x){sd(x)/mean(x)}))
-    Spatial.Insurance[r,d,"L.CV","Plants"]<-mean(apply(X3[preyV,(burnL+1):(burnL+Tmax),101:150],3,function(x){sd(x)/mean(x)}))
-    Spatial.Insurance[r,d,"L.CV","Herb"]<-mean(apply(X3[pred1V,(burnL+1):(burnL+Tmax),101:150],3,function(x){sd(x)/mean(x)}))
-    Spatial.Insurance[r,d,"L.CV","Pred"]<-mean(apply(X3[pred2V,(burnL+1):(burnL+Tmax),101:150],3,function(x){sd(x)/mean(x)}))
-    
-    Spatial.Insurance[r,d,"R.CV","NoInt"]<-sd(apply(X[,(burnL+1):(burnL+Tmax),101:150],2,sum))/mean(apply(X[,(burnL+1):(burnL+Tmax),101:150],2,sum))
-    Spatial.Insurance[r,d,"R.CV","Comp"]<-sd(apply(XI[,(burnL+1):(burnL+Tmax),101:150],2,sum))/mean(apply(XI[,(burnL+1):(burnL+Tmax),101:150],2,sum))
-    Spatial.Insurance[r,d,"R.CV","Mixed"]<-sd(apply(XM[,(burnL+1):(burnL+Tmax),101:150],2,sum))/mean(apply(XM[,(burnL+1):(burnL+Tmax),101:150],2,sum)) 
-    Spatial.Insurance[r,d,"R.CV","Plants"]<-sd(apply(X3[preyV,(burnL+1):(burnL+Tmax),101:150],2,sum))/mean(apply(X3[preyV,(burnL+1):(burnL+Tmax),101:150],2,sum))
-    Spatial.Insurance[r,d,"R.CV","Herb"]<-sd(apply(X3[pred1V,(burnL+1):(burnL+Tmax),101:150],2,sum))/mean(apply(X3[pred1V,(burnL+1):(burnL+Tmax),101:150],2,sum))
-    Spatial.Insurance[r,d,"R.CV","Pred"]<-sd(apply(X3[pred2V,(burnL+1):(burnL+Tmax),101:150],2,sum))/mean(apply(X3[pred2V,(burnL+1):(burnL+Tmax),101:150],2,sum))
   }  
 };close(pb)
 
-save(dispV,Bray.Curt,Spatial.Insurance,Shift.Speed,Error_Rates,Int_Stength,Turnover,Ext_Miss,file = "Species Interactions.RData")
+save(dispV,Turn_mean,rShift.df,file = "Species Interactions.RData")
+
+Turn_means<-Turn_mean%>%
+  group_by(Type,Interactions,Dispersal,Trophic)%>%
+  summarise(Turnover=mean(Turnover),Distance=mean(Distance))
+
+ggplot(Turn_means,aes(x=Dispersal,y=Turnover,color=Interactions))+
+  geom_line()+
+  facet_grid(Type~Trophic,scale="free_y")+
+  scale_x_log10()
+
+ggplot(filter(Turn_means,Type=="Total"),aes(x=Dispersal,y=Distance,color=Interactions))+
+  geom_line()+
+  facet_grid(.~Trophic,scale="free_y")+
+  scale_x_log10()
+
 
 #Figures####
 setwd("/Users/patrickthompson/Dropbox/Patrick/Species Interactions/Manuscript")
