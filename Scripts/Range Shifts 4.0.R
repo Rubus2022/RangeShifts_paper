@@ -238,9 +238,9 @@ for(r in 1:reps){
   }  
 };close(pb)
 
-save(dispV,Turn_mean,rShift.df,file = "./Workspcace/Species Interactions2.RData")
+save(dispV,Net_shift.df,Trophic.shift.df,file = "./Workspcace/Species Interactions2.RData")
 
-options( scipen=999)
+options(scipen=999)
 
 Net_turn_means<-Net_shift.df%>%
   group_by(Part,Scale,Disp,Interactions)%>%
