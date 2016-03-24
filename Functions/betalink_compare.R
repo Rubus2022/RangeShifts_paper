@@ -65,7 +65,7 @@ betalink_min<-function(Com,Ints,prop_links=0.5, trophic, interactions=T){
   return(means)
 }
 
-meta_net_turn<-function(Com,Ints,trophic,interactions=T){
+meta_net_turn<-function(Com,Ints,trophic,prop_links=0.5,interactions=T){
   Meta_com_init<-Com[,burnL,51:100]
   Meta_com_fin<-Com[,l+1,101:150]  
   
