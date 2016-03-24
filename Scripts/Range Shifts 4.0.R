@@ -185,14 +185,22 @@ for(r in 1:reps){
                   meta_net_turn(Com = X3,Ints = B3,trophic = T))
             
             Net_shift.temp$Rep<-r
-            Net_shift.temp$Disp<-disp
+            Net_shift.temp$Dispersal<-disp
             Net_shift.temp$Interactions<-rep(c("Competitive","Mixed","Food web"), each=3)
-            }
+    }
+    
+    Trophic.shift.temp<-rbind(betalink_min_trophic(Com = X3,Ints = B3,prop_links = 0.5,plot = F),
+                              meta_net_turn_trophic(Com = X3,Ints = B3,prop_links = 0.5))
  
+    Trophic.shift.temp$Rep<-r
+    Trophic.shift.temp$Dispersal<-disp
     
     if(r==1 & d==1){
       Net_shift.df<-Net_shift.temp
-    } else {Net_shift.df<-rbind(Net_shift.df,Net_shift.temp)}
+      Trophic.shift.df<-Trophic.shift.temp
+    } else {Net_shift.df<-rbind(Net_shift.df,Net_shift.temp)
+    Trophic.shift.df<-rbind(Trophic.shift.df,Trophic.shift.temp)
+    }
   
     
     
