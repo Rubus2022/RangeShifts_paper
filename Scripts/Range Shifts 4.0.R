@@ -1,12 +1,16 @@
 library(vegan)
 library(ggplot2)
+library(ggExtra)
 library(RColorBrewer)
 library(dplyr)
+library(betalink)
+library(igraph)
 
 source("./Functions/rShift_func.r")
+source("./Functions/betalink_compare.r")
 
 dispV<-c(0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.5,1)
-reps<-2
+reps<-5
 dd<-c(0.3,0.2,0.1)#kernel decay strength
 FoodWeb<-c("NoInt","Comp","Mixed","Plants","Herb","Pred") 
 
@@ -154,54 +158,128 @@ for(r in 1:reps){
       MeanInteract[l,,2]<-rowMeans(BI1%*%XI[,l,])
       MeanInteract[l,,3]<-rowMeans(BM1%*%XM[,l,])
       MeanInteract[l,,4]<-rowMeans(B31%*%X3[,l,])
-      #print(l)
     }
-    Turnover.df.temp<-rbind(Com_compare(X,Int_type = "None",Trophic = "No"),
-                            Com_compare(XI,Int_type = "Competitive",Trophic = "No"),
-                            Com_compare(XM,Int_type = "Mixed",Trophic = "No"),
-                            Com_compare(X3[preyV,,],Int_type = "Plants",Trophic = "Yes"),
-                            Com_compare(X3[pred1V,,],Int_type = "Herbivores",Trophic = "Yes"),
-                            Com_compare(X3[pred2V,,],Int_type = "Predators",Trophic = "Yes"))
-    
-    
-    Turnover.means.temp<-Turnover.df.temp%>%
-      group_by(F_patch,I_patch,Interactions,Dispersal,Trophic)%>%
-      mutate(Total_turnover=max(Turnover))%>%
-      group_by(F_patch,Interactions,Dispersal,Trophic)%>%
-      filter(Total_turnover==min(Total_turnover))%>%
-      group_by(Type,Interactions,Dispersal,Trophic)%>%
-      summarise(Turnover=mean(Turnover),Distance=mean(F_patch-I_patch))
-    
-    #calculate speed and variability of range shift
-    rShift.df_temp<-rbind(rSpeedVary(X,Int_type = "None",Trophic = "No"),
-                          rSpeedVary(XI,Int_type = "Competitive",Trophic = "No"),
-                          rSpeedVary(XM,Int_type = "Mixed",Trophic = "No"),
-                          rSpeedVary(X3[preyV,,],Int_type = "Plants",Trophic = "Yes"),
-                          rSpeedVary(X3[pred1V,,],Int_type = "Herbivores",Trophic = "Yes"),
-                          rSpeedVary(X3[pred2V,,],Int_type = "Predators",Trophic = "Yes"))
-    
+
+    # if(r==1){
+    # Net_shift.temp<-rbind(betalink_min(Com=X,Ints = BN,prop_links = 0.5,trophic = F,interactions = F),
+    #       betalink_min(Com=XI,Ints = BI,prop_links = 0.5,trophic = F),
+    #       betalink_min(Com=XM,Ints = BM,prop_links = 0.5,trophic = F),
+    #       betalink_min(Com=X3,Ints = B3,prop_links = 0.5,trophic = T))
+    # 
+    # Net_shift.temp<-as.data.frame(Net_shift.temp)
+    # Net_shift.temp$Rep<-r
+    # Net_shift.temp$Disp<-disp
+    # Net_shift.temp$Interactions<-c("None","Competitive","Mixed","Food web")
+    # 
+    # } else{
+            Net_shift.temp<-rbind(betalink_min(Com=XI,Ints = BI,prop_links = 0.5,trophic = F),
+                                  betalink_min(Com=XM,Ints = BM,prop_links = 0.5,trophic = F),
+                                  betalink_min(Com=X3,Ints = B3,prop_links = 0.5,trophic = T))
+            Net_shift.temp<-as.data.frame(Net_shift.temp)
+            Net_shift.temp<-rbind(Net_shift.temp,
+                  meta_net_turn(Com = XI,Ints = BI,trophic = F),
+                  meta_net_turn(Com = XM,Ints = BM,trophic = F),
+                  meta_net_turn(Com = X3,Ints = B3,trophic = T))
+            
+            Net_shift.temp$Rep<-r
+            Net_shift.temp$Disp<-disp
+            Net_shift.temp$Interactions<-rep(c("Competitive","Mixed","Food web"), each=3)
+            # }
+ 
     
     if(r==1 & d==1){
-      rShift.df<-rShift.df_temp
-      Turn_mean<-Turnover.means.temp
-    } else {rShift.df<-rbind(rShift.df,rShift.df_temp)
-    Turn_mean<-rbind(Turn_mean,Turnover.means.temp)}
+      Net_shift.df<-Net_shift.temp
+    } else {Net_shift.df<-rbind(Net_shift.df,Net_shift.temp)}
+    
+    
+    
+    
+    # Turnover.df.temp<-rbind(Com_compare(X,Int_type = "None",Trophic = "No"),
+    #                         Com_compare(XI,Int_type = "Competitive",Trophic = "No"),
+    #                         Com_compare(XM,Int_type = "Mixed",Trophic = "No"),
+    #                         Com_compare(X3,Int_type = "Food web", Trophic = "No"))
+    # 
+    # 
+    # Turnover.means.temp<-Turnover.df.temp%>%
+    #   group_by(F_patch,I_patch,Interactions,Dispersal,Trophic)%>%
+    #   mutate(Total_turnover=max(Turnover))%>%
+    #   group_by(F_patch,Interactions,Dispersal,Trophic)%>%
+    #   filter(Total_turnover==min(Total_turnover))%>%
+    #   group_by(Type,Interactions,Dispersal,Trophic)%>%
+    #   summarise(Turnover=mean(Turnover),Distance=mean(F_patch-I_patch))
+    # 
+    # #calculate speed and variability of range shift
+    # rShift.df_temp<-rbind(rSpeedVary(X,Int_type = "None",Trophic = "No"),
+    #                       rSpeedVary(XI,Int_type = "Competitive",Trophic = "No"),
+    #                       rSpeedVary(XM,Int_type = "Mixed",Trophic = "No"),
+    #                       rSpeedVary(X3,Int_type = "Food web",Trophic = "No"),
+    #                       rSpeedVary(X3[preyV,,],Int_type = "Plants",Trophic = "Yes"),
+    #                       rSpeedVary(X3[pred1V,,],Int_type = "Herbivores",Trophic = "Yes"),
+    #                       rSpeedVary(X3[pred2V,,],Int_type = "Predators",Trophic = "Yes"))
+    # 
+    # 
+    # if(r==1 & d==1){
+    #   rShift.df<-rShift.df_temp
+    #   Turn_mean<-Turnover.means.temp
+    # } else {rShift.df<-rbind(rShift.df,rShift.df_temp)
+    # Turn_mean<-rbind(Turn_mean,Turnover.means.temp)}
     
   }  
 };close(pb)
 
-save(dispV,Turn_mean,rShift.df,file = "Species Interactions.RData")
+save(dispV,Turn_mean,rShift.df,file = "./Workspcace/Species Interactions2.RData")
+
+options( scipen=999)
 
 Turn_means<-Turn_mean%>%
   group_by(Type,Interactions,Dispersal,Trophic)%>%
-  summarise(Turnover=mean(Turnover),Distance=mean(Distance))
+  summarise(Turn_SD_max=(mean(Turnover)+sd(Turnover)),Turn_SD_min=(mean(Turnover)-sd(Turnover)),Turnover=mean(Turnover),
+            Dist_max=max(Distance),Dist_min=min(Distance),Dist_SD_max=mean(Distance)+sd(Distance),Dist_SD_min=mean(Distance)-sd(Distance),Distance=mean(Distance))%>%
+  mutate(Turn_SD_min=replace(Turn_SD_min,Turn_SD_min<0,0),Turn_SD_max=replace(Turn_SD_max,Turn_SD_max>1,1),
+         Dist_SD_max=replace(Dist_SD_max,Dist_SD_max>Dist_max,Dist_max),Dist_SD_min=replace(Dist_SD_min,Dist_SD_min>Dist_min,Dist_min))
 
-ggplot(Turn_means,aes(x=Dispersal,y=Turnover,color=Interactions))+
+ggplot(Turn_means,aes(x=Dispersal,y=Turnover,color=Interactions, fill=Interactions))+
+  geom_ribbon(aes(ymax=Turn_SD_max,ymin=Turn_SD_min),alpha=0.2,color=NA)+
   geom_line()+
   facet_grid(Type~Trophic,scale="free_y")+
-  scale_x_log10()
+  scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
+  removeGrid()+
+  theme_bw(base_size = 15)
 
-ggplot(filter(Turn_means,Type=="Total"),aes(x=Dispersal,y=Distance,color=Interactions))+
+ggplot(filter(Turn_means,Type=="Total"),aes(x=Dispersal,y=Distance,color=Interactions,fill=Interactions))+
+  geom_ribbon(aes(ymax=Dist_SD_max,ymin=Dist_SD_min),alpha=0.2,color=NA)+
+  geom_line()+
+  facet_grid(Type~Trophic,scale="free_y")+
+  scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
+  removeGrid()+
+  theme_bw(base_size = 15)+
+  geom_hline(yintercept = 50,linetype=2)
+
+rShift_means<-rShift.df%>%
+  group_by(Interactions,Trophic,Dispersal)%>%
+  summarise(Speed=mean(Speed,na.rm=T),Pos_speed=mean(Pos_speed,na.rm=T),Variability=mean(Variability,na.rm=T),Pos_vary=mean(Pos_vary,na.rm=T),Range_prop=mean(Range_prop,na.rm=T),Range_prop_persist=mean(Range_prop_persist,na.rm=T))
+
+ggplot(rShift_means,aes(x=Dispersal,y=Pos_speed,color=Interactions, fill=Interactions))+
+  #geom_ribbon(aes(ymax=Turn_SD_max,ymin=Turn_SD_min),alpha=0.2,color=NA)+
   geom_line()+
   facet_grid(.~Trophic,scale="free_y")+
-  scale_x_log10()
+  scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
+  removeGrid()+
+  theme_bw(base_size = 15)
+
+ggplot(rShift_means,aes(x=Dispersal,y=Variability,color=Interactions, fill=Interactions))+
+  #geom_ribbon(aes(ymax=Turn_SD_max,ymin=Turn_SD_min),alpha=0.2,color=NA)+
+  geom_line()+
+  facet_grid(.~Trophic,scale="free_y")+
+  scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
+  removeGrid()+
+  theme_bw(base_size = 15)
+
+ggplot(rShift_means,aes(x=Dispersal,y=Range_prop_persist,color=Interactions, fill=Interactions))+
+  #geom_ribbon(aes(ymax=Turn_SD_max,ymin=Turn_SD_min),alpha=0.2,color=NA)+
+  geom_line()+
+  facet_grid(.~Trophic,scale="free_y")+
+  scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
+  removeGrid()+
+  theme_bw(base_size = 15)+
+  geom_hline(yintercept = 1,linetype=2)
