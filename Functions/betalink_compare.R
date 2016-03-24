@@ -26,8 +26,13 @@ betalink_compare<-function(Com_inits,Com_final,Ints,prop_links=0.5, trophic, int
     Ints2<-matrix(0,dim(Ints),dim(Ints))
     colnames(Ints2)<-colnames(Ints)
     rownames(Ints2)<-rownames(Ints)
-    Ints2[order(Int_strength,decreasing = T)[1:keepV]]<-1
-    return(graph.adjacency(t(Ints2[x>0,x>0])))
+    if(keepV>0){
+      Ints2[order(Int_strength,decreasing = T)[1:keepV]]<-1
+      return(graph.adjacency(Ints2[x>0,x>0]))} else{
+        hold.df<-data.frame(Ints2[x>0,x>0])
+        names(hold.df)<-colnames(Ints)[x>0]
+        return(graph.adjacency(hold.df))
+      }
   })
   nets_bin<-apply(cbind(Com_final,Com_inits),2,function(x){
     Int_strength<-abs(Ints*rep(x,each=n))
@@ -42,6 +47,7 @@ betalink_compare<-function(Com_inits,Com_final,Ints,prop_links=0.5, trophic, int
   link_dis<-(as.matrix(vegdist(t(nets_bin),method = "jaccard",binary = T))[,1])[-1]
   min_dist<-which(link_dis==min(link_dis))
   
+  if(mean(link_dis)==1){min_dist<-25}
   
   bl_dist<-lapply(min_dist,function(x){
     return(betalink2(nets[[x+1]],nets[[1]],bf = B_jack_diss))
@@ -55,11 +61,11 @@ betalink_compare<-function(Com_inits,Com_final,Ints,prop_links=0.5, trophic, int
   }
   if(plot==T){network_betaplot(nets[[1]],nets[[min_dist+1]])}
   
-  
-  gains_loss<-rbind(betalink(nets[[1]],nets[[min_dist+1]],bf = B_jack_diss_gains),betalink(nets[[1]],nets[[min_dist+1]],bf = B_jack_diss_loss))
+  gains_loss<-rbind(betalink2(nets[[1]],nets[[min_dist+1]],bf = B_jack_diss_gains),betalink2(nets[[1]],nets[[min_dist+1]],bf = B_jack_diss_loss))
   gains_loss<-data.frame(matrix(unlist(gains_loss),2,byrow=F)) 
   names(gains_loss)<-c("S","OS","WN","ST")
   min_turn_all<-rbind(bl_dist,gains_loss)
+  if(bl_dist$WN==1){min_dist<-NA}
   min_turn_all$patch<-min_dist
   min_turn_all$part<-c("All","Gain","Loss")
   
@@ -74,7 +80,7 @@ betalink_min<-function(Com,Ints,prop_links=0.5, trophic, interactions=T,plot=T){
   hold2$Shift<-hold2$Patch-hold2$Shift-75
   means<-hold2%>%
     group_by(Part)%>%
-    summarise_each(funs(mean))
+    summarise_each(funs(mean(.,na.rm=T)))
   means$Patch<-NULL
   means$Scale<-"Local"
   return(means)
@@ -91,24 +97,36 @@ meta_net_turn<-function(Com,Ints,trophic,prop_links=0.5,interactions=T){
       colnames(Ints)<-rownames(Ints)<-paste("s",1:n)}
   nets1<-apply(Meta_com_init,2,function(x){
     Int_strength<-abs(Ints*rep(x,each=n))
+    Int_strength[x==0,]<-0
     keepV<-round(sum(Int_strength>0)*prop_links)
     Ints2<-matrix(0,dim(Ints),dim(Ints))
     colnames(Ints2)<-colnames(Ints)
     rownames(Ints2)<-rownames(Ints)
-    Ints2[order(Int_strength,decreasing = T)[1:keepV]]<-1
-    return(graph.adjacency(Ints2[x>0,x>0]))
+    if(keepV>0){
+      Ints2[order(Int_strength,decreasing = T)[1:keepV]]<-1
+      return(graph.adjacency(Ints2[x>0,x>0]))} else{
+        hold.df<-data.frame(Ints2[x>0,x>0])
+        names(hold.df)<-colnames(Ints)[x>0]
+        return(graph.adjacency(hold.df))
+      }
   })
   
   nets2<-apply(Meta_com_fin,2,function(x){
     Int_strength<-abs(Ints*rep(x,each=n))
+    Int_strength[x==0,]<-0
     keepV<-round(sum(Int_strength>0)*prop_links)
     Ints2<-matrix(0,dim(Ints),dim(Ints))
     colnames(Ints2)<-colnames(Ints)
     rownames(Ints2)<-rownames(Ints)
+    if(keepV>0){
     Ints2[order(Int_strength,decreasing = T)[1:keepV]]<-1
-    return(graph.adjacency(Ints2[x>0,x>0]))
+    return(graph.adjacency(Ints2[x>0,x>0]))} else{
+      hold.df<-data.frame(Ints2[x>0,x>0])
+      names(hold.df)<-colnames(Ints)[x>0]
+      return(graph.adjacency(hold.df))
+    }
   })
-  
+
   mWeb1<-metaweb(nets1)
   mWeb2<-metaweb(nets2)
   
