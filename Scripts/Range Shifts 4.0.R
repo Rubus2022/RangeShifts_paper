@@ -10,7 +10,7 @@ source("./Functions/rShift_func.r")
 source("./Functions/betalink_compare.r")
 
 dispV<-c(0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.5,1)
-reps<-5
+reps<-1
 dd<-c(0.3,0.2,0.1)#kernel decay strength
 FoodWeb<-c("NoInt","Comp","Mixed","Plants","Herb","Pred") 
 
@@ -172,9 +172,9 @@ for(r in 1:reps){
     # Net_shift.temp$Interactions<-c("None","Competitive","Mixed","Food web")
     # 
     # } else{
-            Net_shift.temp<-rbind(betalink_min(Com=XI,Ints = BI,prop_links = 0.5,trophic = F),
-                                  betalink_min(Com=XM,Ints = BM,prop_links = 0.5,trophic = F),
-                                  betalink_min(Com=X3,Ints = B3,prop_links = 0.5,trophic = T))
+            Net_shift.temp<-rbind(betalink_min(Com=XI,Ints = BI,prop_links = 0.5,trophic = F,plot=F),
+                                  betalink_min(Com=XM,Ints = BM,prop_links = 0.5,trophic = F, plot=F),
+                                  betalink_min(Com=X3,Ints = B3,prop_links = 0.5,trophic = T, plot=F))
             Net_shift.temp<-as.data.frame(Net_shift.temp)
             Net_shift.temp<-rbind(Net_shift.temp,
                   meta_net_turn(Com = XI,Ints = BI,trophic = F),
