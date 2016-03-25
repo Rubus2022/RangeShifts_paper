@@ -166,7 +166,7 @@ for(r in 1:reps){
                             betalink_min(Com=X3,Ints = B3,prop_links = 0.5,trophic = T, plot=T))
       Net_shift.temp<-as.data.frame(Net_shift.temp)
       Net_shift.temp<-rbind(Net_shift.temp,
-                            meta_net_turn(Com = X,Ints = BN,trophic = F,interactions = F)
+                            meta_net_turn(Com = X,Ints = BN,trophic = F,interactions = F),
                             meta_net_turn(Com = XI,Ints = BI,trophic = F),
                             meta_net_turn(Com = XM,Ints = BM,trophic = F),
                             meta_net_turn(Com = X3,Ints = B3,trophic = T))
