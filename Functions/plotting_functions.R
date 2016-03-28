@@ -55,7 +55,7 @@ meta_net_plot<-function(Com,Ints,trophic,prop_links=0.5,interactions=T){
   
   lay.mat<-lay.mat[order(lay.mat$order),]
   
-  network_betaplot(mWeb2,mWeb1,layout=as.matrix(lay.mat[,1:2]),nb = "red",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.25,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(0,1))
+  network_betaplot(mWeb2,mWeb1,layout=as.matrix(lay.mat[,1:2]),nb = "red",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(0,1))
 }
 
 local_net_plot<-function(Com_inits,Com_final,Ints,trophic,prop_links=0.5,interactions=T){
@@ -121,5 +121,5 @@ local_net_plot<-function(Com_inits,Com_final,Ints,trophic,prop_links=0.5,interac
   
   lay.mat<-lay.mat[order(lay.mat$order),]
   
-  network_betaplot(web1,web2,layout=as.matrix(lay.mat[,1:2]),nb = "red",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.25,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(0,1))
+  network_betaplot(web1,web2,layout=as.matrix(lay.mat[,1:2]),nb = "red",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(0,1))
 }
