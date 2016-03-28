@@ -197,6 +197,22 @@ betalink_compare_trophic<-function(Com_inits,Com_final,Ints,prop_links=0.5, trop
   
   if(mean(link_dis)==1){min_dist<-25}
   
+  nets<-apply(cbind(Com_final,Com_inits),2,function(x){
+    Int_strength<-abs(Ints*rep(x,each=n))
+    Int_strength[x==0,]<-0
+    keepV<-round(sum(Int_strength>0)*prop_links)
+    Ints2<-matrix(0,dim(Ints),dim(Ints))
+    colnames(Ints2)<-colnames(Ints)
+    rownames(Ints2)<-rownames(Ints)
+    if(keepV>0){
+      Ints2[order(Int_strength,decreasing = T)[1:keepV]]<-1
+      return(graph.adjacency(t(Ints2[x>0,x>0])))} else{
+        hold.df<-data.frame(Ints2[x>0,x>0])
+        rownames(hold.df)<-colnames(Ints)[x>0]
+        return(graph.adjacency(t(hold.df)))
+      }
+  })
+  
   nets_pl<-apply(cbind(Com_final,Com_inits),2,function(x){
     Int_strength<-abs(Ints*rep(x,each=n))
     Int_strength[x==0,]<-0
@@ -208,8 +224,9 @@ betalink_compare_trophic<-function(Com_inits,Com_final,Ints,prop_links=0.5, trop
       Ints2[order(Int_strength,decreasing = T)[1:keepV]]<-1
       Ints3<-Ints2[preyV,preyV]
       return(graph.adjacency(t(Ints3[(x[preyV]>0),(x[preyV]>0)])))} else{
+        Ints3<-Ints2[preyV,preyV]
         hold.df<-data.frame(Ints3[(x[preyV]>0),(x[preyV]>0)])
-        rownames(hold.df)<-colnames(Ints)[x[preyV]>0]
+        rownames(hold.df)<-colnames(Ints[,preyV])[x[preyV]>0]
         return(graph.adjacency(t(hold.df)))
       }
   })
@@ -227,8 +244,11 @@ betalink_compare_trophic<-function(Com_inits,Com_final,Ints,prop_links=0.5, trop
       Ints3<-Ints3[-pred2V,]
       Ints3[preyV,preyV]<-0
       return(graph.adjacency(t(Ints3[x[-pred2V]>0,x[-pred2V]>0])))} else{
+        Ints3<-Ints2[,-pred2V]
+        Ints3<-Ints3[-pred2V,]
+        Ints3[preyV,preyV]<-0
         hold.df<-data.frame(Ints3[x[-pred2V]>0,x[-pred2V]>0])
-        rownames(hold.df)<-colnames(Ints)[x[-pred2V]>0]
+        rownames(hold.df)<-colnames(Ints[,-pred2V])[x[-pred2V]>0]
         return(graph.adjacency(t(hold.df)))
       }
   })
@@ -245,8 +265,10 @@ betalink_compare_trophic<-function(Com_inits,Com_final,Ints,prop_links=0.5, trop
       Ints3<-Ints2[-preyV,]
       Ints3<-Ints3[,-preyV]
       return(graph.adjacency(t(Ints3[x[-preyV]>0,x[-preyV]>0])))} else{
+        Ints3<-Ints2[-preyV,]
+        Ints3<-Ints3[,-preyV]
         hold.df<-data.frame(Ints3[x[-preyV]>0,x[-preyV]>0])
-        rownames(hold.df)<-colnames(Ints)[x[-preyV]>0]
+        rownames(hold.df)<-colnames(Ints[,-preyV])[x[-preyV]>0]
         return(graph.adjacency(t(hold.df)))
       }
   })
@@ -265,12 +287,12 @@ betalink_compare_trophic<-function(Com_inits,Com_final,Ints,prop_links=0.5, trop
   Food_web_dis.temp<-rbind(data.frame(betalink2(nets_pl[[min_dist+1]],nets_pl[[1]],bf=B_jack_diss)),
                            data.frame(betalink2(nets_h[[min_dist+1]],nets_h[[1]],bf=B_jack_diss)),
                            data.frame(betalink2(nets_c[[min_dist+1]],nets_c[[1]],bf=B_jack_diss)),
-                           data.frame(betalink2(nets_pl[[min_dist+1]],nets_pl[[1]],bf=B_jack_diss_gains)),
-                           data.frame(betalink2(nets_h[[min_dist+1]],nets_h[[1]],bf=B_jack_diss_gains)),
-                           data.frame(betalink2(nets_c[[min_dist+1]],nets_c[[1]],bf=B_jack_diss_gains)),
-                           data.frame(betalink2(nets_pl[[min_dist+1]],nets_pl[[1]],bf=B_jack_diss_loss)),
-                           data.frame(betalink2(nets_h[[min_dist+1]],nets_h[[1]],bf=B_jack_diss_loss)),
-                           data.frame(betalink2(nets_c[[min_dist+1]],nets_c[[1]],bf=B_jack_diss_loss)))
+                           data.frame(betalink2(nets_pl[[1]],nets_pl[[min_dist+1]],bf=B_jack_diss_gains)),
+                           data.frame(betalink2(nets_h[[1]],nets_h[[min_dist+1]],bf=B_jack_diss_gains)),
+                           data.frame(betalink2(nets_c[[1]],nets_c[[min_dist+1]],bf=B_jack_diss_gains)),
+                           data.frame(betalink2(nets_pl[[1]],nets_pl[[min_dist+1]],bf=B_jack_diss_loss)),
+                           data.frame(betalink2(nets_h[[1]],nets_h[[min_dist+1]],bf=B_jack_diss_loss)),
+                           data.frame(betalink2(nets_c[[1]],nets_c[[min_dist+1]],bf=B_jack_diss_loss)))
   
   Food_web_dis.temp$Level<-c("Plants","Herbivores","Predators")
   Food_web_dis.temp$Part<-rep(c("All","Gain","Loss"),each=3)
@@ -310,8 +332,9 @@ meta_net_turn_trophic<-function(Com,Ints,prop_links=0.5,trophic=T,interactions=T
       Ints2[order(Int_strength,decreasing = T)[1:keepV]]<-1
       Ints3<-Ints2[preyV,preyV]
       return(graph.adjacency(t(Ints3[(x[preyV]>0),(x[preyV]>0)])))} else{
+        Ints3<-Ints2[preyV,preyV]
         hold.df<-data.frame(Ints3[(x[preyV]>0),(x[preyV]>0)])
-        rownames(hold.df)<-colnames(Ints)[x[preyV]>0]
+        rownames(hold.df)<-colnames(Ints[,preyV])[x[preyV]>0]
         return(graph.adjacency(t(hold.df)))
       }
   })
@@ -329,8 +352,11 @@ meta_net_turn_trophic<-function(Com,Ints,prop_links=0.5,trophic=T,interactions=T
       Ints3<-Ints3[-pred2V,]
       Ints3[preyV,preyV]<-0
       return(graph.adjacency(t(Ints3[x[-pred2V]>0,x[-pred2V]>0])))} else{
+        Ints3<-Ints2[,-pred2V]
+        Ints3<-Ints3[-pred2V,]
+        Ints3[preyV,preyV]<-0
         hold.df<-data.frame(Ints3[x[-pred2V]>0,x[-pred2V]>0])
-        rownames(hold.df)<-colnames(Ints)[x[-pred2V]>0]
+        rownames(hold.df)<-colnames(Ints[,-pred2V])[x[-pred2V]>0]
         return(graph.adjacency(t(hold.df)))
       }
   })
@@ -347,8 +373,10 @@ meta_net_turn_trophic<-function(Com,Ints,prop_links=0.5,trophic=T,interactions=T
       Ints3<-Ints2[-preyV,]
       Ints3<-Ints3[,-preyV]
       return(graph.adjacency(t(Ints3[x[-preyV]>0,x[-preyV]>0])))} else{
+        Ints3<-Ints2[-preyV,]
+        Ints3<-Ints3[,-preyV]
         hold.df<-data.frame(Ints3[x[-preyV]>0,x[-preyV]>0])
-        rownames(hold.df)<-colnames(Ints)[x[-preyV]>0]
+        rownames(hold.df)<-colnames(Ints[,-preyV])[x[-preyV]>0]
         return(graph.adjacency(t(hold.df)))
       }
   })
@@ -364,8 +392,9 @@ meta_net_turn_trophic<-function(Com,Ints,prop_links=0.5,trophic=T,interactions=T
       Ints2[order(Int_strength,decreasing = T)[1:keepV]]<-1
       Ints3<-Ints2[preyV,preyV]
       return(graph.adjacency(t(Ints3[(x[preyV]>0),(x[preyV]>0)])))} else{
+        Ints3<-Ints2[preyV,preyV]
         hold.df<-data.frame(Ints3[(x[preyV]>0),(x[preyV]>0)])
-        rownames(hold.df)<-colnames(Ints)[x[preyV]>0]
+        rownames(hold.df)<-colnames(Ints[,preyV])[x[preyV]>0]
         return(graph.adjacency(t(hold.df)))
       }
   })
@@ -383,8 +412,11 @@ meta_net_turn_trophic<-function(Com,Ints,prop_links=0.5,trophic=T,interactions=T
       Ints3<-Ints3[-pred2V,]
       Ints3[preyV,preyV]<-0
       return(graph.adjacency(t(Ints3[x[-pred2V]>0,x[-pred2V]>0])))} else{
+        Ints3<-Ints2[,-pred2V]
+        Ints3<-Ints3[-pred2V,]
+        Ints3[preyV,preyV]<-0
         hold.df<-data.frame(Ints3[x[-pred2V]>0,x[-pred2V]>0])
-        rownames(hold.df)<-colnames(Ints)[x[-pred2V]>0]
+        rownames(hold.df)<-colnames(Ints[,-pred2V])[x[-pred2V]>0]
         return(graph.adjacency(t(hold.df)))
       }
   })
@@ -401,8 +433,10 @@ meta_net_turn_trophic<-function(Com,Ints,prop_links=0.5,trophic=T,interactions=T
       Ints3<-Ints2[-preyV,]
       Ints3<-Ints3[,-preyV]
       return(graph.adjacency(t(Ints3[x[-preyV]>0,x[-preyV]>0])))} else{
+        Ints3<-Ints2[-preyV,]
+        Ints3<-Ints3[,-preyV]
         hold.df<-data.frame(Ints3[x[-preyV]>0,x[-preyV]>0])
-        rownames(hold.df)<-colnames(Ints)[x[-preyV]>0]
+        rownames(hold.df)<-colnames(Ints[,-preyV])[x[-preyV]>0]
         return(graph.adjacency(t(hold.df)))
       }
   })
