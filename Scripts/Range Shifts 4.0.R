@@ -9,7 +9,7 @@ library(igraph)
 source("./Functions/betalink_compare.r")
 
 dispV<-c(0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.5,1)
-reps<-1
+reps<-10
 dd<-c(0.3,0.2,0.1)#kernel decay strength
 FoodWeb<-c("NoInt","Comp","Mixed","Plants","Herb","Pred") 
 
@@ -172,8 +172,8 @@ for(r in 1:reps){
                             meta_net_turn(Com = X3,Ints = B3,trophic = T))
       
       Net_shift.temp$Rep<-r
-      Net_shift.temp$Disp<-disp
-      Net_shift.temp$Interactions<-rep(c("Competitive","Mixed","Food web"), each=3)
+      Net_shift.temp$Dispersal<-disp
+      Net_shift.temp$Interactions<-rep(rep(c("No interactions","Competitive","Mixed","Food web"), each=3))
     } else{
             Net_shift.temp<-rbind(betalink_min(Com=XI,Ints = BI,prop_links = 0.5,trophic = F,plot=F),
                                   betalink_min(Com=XM,Ints = BM,prop_links = 0.5,trophic = F, plot=F),
@@ -243,15 +243,15 @@ save(dispV,Net_shift.df,Trophic.shift.df,file = "./Workspcace/Species Interactio
 options(scipen=999)
 
 Net_turn_means<-Net_shift.df%>%
-  group_by(Part,Scale,Disp,Interactions)%>%
+  group_by(Part,Scale,Dispersal,Interactions)%>%
   summarise_each(funs(mean(.,na.rm=T)))
 
-Net_turn_means$Interactions<-factor(Net_turn_means$Interactions,levels = c("Competitive","Mixed","Food web"),ordered = T)
+Net_turn_means$Interactions<-factor(Net_turn_means$Interactions,levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
 
 
 pdf("./Figures/Network turnover.pdf",width = 8,height = 8)
-ggplot(Net_turn_means,aes(x=Disp,y=WN,color=Interactions))+
-  facet_grid(Part~Scale)+
+ggplot(Net_turn_means,aes(x=Dispersal,y=WN,color=Interactions))+
+  facet_grid(Part~Scale,scales="free")+
   geom_line(size=1.2)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
   scale_color_brewer(palette = "Set1")+
@@ -263,7 +263,7 @@ dev.off()
 
 
 pdf("./Figures/Network climate offset.pdf",width = 6,height = 5)
-ggplot(filter(Net_turn_means,Scale=="Local"),aes(x=Disp,y=Shift,color=Interactions))+
+ggplot(filter(Net_turn_means,Scale=="Local"),aes(x=Dispersal,y=Shift,color=Interactions))+
   geom_hline(yintercept = 0,linetype=2)+
   geom_line(size=1.2)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
@@ -273,3 +273,18 @@ ggplot(filter(Net_turn_means,Scale=="Local"),aes(x=Disp,y=Shift,color=Interactio
   ylab("Climate offset")+
   xlab("Dispersal")
 dev.off()
+
+
+Trophic_shift_means<-Trophic.shift.df%>%
+  group_by(Part,Scale,Dispersal,Level)%>%
+  summarise_each(funs(mean(.,na.rm=T)))
+
+ggplot(Trophic_shift_means,aes(x=Dispersal,y=WN,color=Level))+
+  facet_grid(Part~Scale, scales="free")+
+  geom_line(size=1.2)+
+  scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
+  scale_color_brewer(palette = "Set1")+
+  theme_bw(base_size = 15)+
+  removeGrid()+
+  ylab("Network dissimilarity")+
+  xlab("Dispersal")
