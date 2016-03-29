@@ -238,23 +238,25 @@ for(r in 1:reps){
   }  
 };close(pb)
 
-save(dispV,Net_shift.df,Trophic.shift.df,file = "./Workspcace/Species Interactions2.RData")
+save(dispV,Net_shift.df,Trophic.shift.df,file = "./Workspace/Species Interactions2.RData")
 
 options(scipen=999)
 
 Net_turn_means<-Net_shift.df%>%
   group_by(Part,Scale,Dispersal,Interactions)%>%
-  summarise_each(funs(mean(.,na.rm=T)))
+  summarise_each(funs(mean(.,na.rm=T),sd(.,na.rm=T)))
 
 Net_turn_means$Interactions<-factor(Net_turn_means$Interactions,levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
 
 
 pdf("./Figures/Network turnover.pdf",width = 8,height = 8)
-ggplot(Net_turn_means,aes(x=Dispersal,y=WN,color=Interactions))+
+ggplot(Net_turn_means,aes(x=Dispersal,y=WN_mean,color=Interactions, fill=Interactions))+
   facet_grid(Part~Scale,scales="free")+
   geom_line(size=1.2)+
+  geom_ribbon(aes(ymin=WN_mean-WN_sd,ymax=WN_mean+WN_sd),alpha=0.2, color=NA)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
   scale_color_brewer(palette = "Set1")+
+  scale_fill_brewer(palette = "Set1")+
   theme_bw(base_size = 15)+
   removeGrid()+
   ylab("Network dissimilarity")+
@@ -263,11 +265,13 @@ dev.off()
 
 
 pdf("./Figures/Network climate offset.pdf",width = 6,height = 5)
-ggplot(filter(Net_turn_means,Scale=="Local"),aes(x=Dispersal,y=Shift,color=Interactions))+
+ggplot(filter(Net_turn_means,Scale=="Local"),aes(x=Dispersal,y=Shift_mean,color=Interactions,fill=Interactions))+
   geom_hline(yintercept = 0,linetype=2)+
   geom_line(size=1.2)+
+  geom_ribbon(aes(ymin=Shift_mean-Shift_sd,ymax=Shift_mean+Shift_sd),alpha=0.2,color=NA)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
   scale_color_brewer(palette = "Set1")+
+  scale_fill_brewer(palette = "Set1")+
   theme_bw(base_size = 15)+
   removeGrid()+
   ylab("Climate offset")+
@@ -277,14 +281,20 @@ dev.off()
 
 Trophic_shift_means<-Trophic.shift.df%>%
   group_by(Part,Scale,Dispersal,Level)%>%
-  summarise_each(funs(mean(.,na.rm=T)))
+  summarise_each(funs(mean(.,na.rm=T),sd(.,na.rm=T)))
 
-ggplot(Trophic_shift_means,aes(x=Dispersal,y=WN,color=Level))+
+Trophic_shift_means$Level<-factor(Trophic_shift_means$Level,levels = c("Predators","Herbivores","Plants"),ordered = T)
+
+pdf("./Figures/Trophic turnover.pdf",width = 8,height = 8)
+ggplot(Trophic_shift_means,aes(x=Dispersal,y=WN_mean,color=Level,fill=Level))+
   facet_grid(Part~Scale, scales="free")+
   geom_line(size=1.2)+
+  geom_ribbon(aes(ymin=WN_mean-WN_sd,ymax=WN_mean+WN_sd),alpha=0.2,color=NA)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
   scale_color_brewer(palette = "Set1")+
+  scale_fill_brewer(palette = "Set1")+
   theme_bw(base_size = 15)+
   removeGrid()+
   ylab("Network dissimilarity")+
   xlab("Dispersal")
+dev.off()
