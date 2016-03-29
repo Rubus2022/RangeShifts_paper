@@ -456,12 +456,12 @@ meta_net_turn_trophic<-function(Com,Ints,prop_links=0.5,trophic=T,interactions=T
   meta_change<-rbind(data.frame(betalink(mWeb1_pl,mWeb2_pl,bf=B_jack_diss)),
                      data.frame(betalink(mWeb1_h,mWeb2_h,bf=B_jack_diss)),
                      data.frame(betalink(mWeb1_c,mWeb2_c,bf=B_jack_diss)),
-                     data.frame(betalink(mWeb1_pl,mWeb2_pl,bf=B_jack_diss_gains)),
-                     data.frame(betalink(mWeb1_h,mWeb2_h,bf=B_jack_diss_gains)),
-                     data.frame(betalink(mWeb1_c,mWeb2_c,bf=B_jack_diss_gains)),
-                     data.frame(betalink(mWeb1_pl,mWeb2_pl,bf=B_jack_diss_loss)),
-                     data.frame(betalink(mWeb1_h,mWeb2_h,bf=B_jack_diss_loss)),
-                     data.frame(betalink(mWeb1_c,mWeb2_c,bf=B_jack_diss_loss)))
+                     data.frame(betalink(mWeb2_pl,mWeb1_pl,bf=B_jack_diss_gains)),
+                     data.frame(betalink(mWeb2_h,mWeb1_h,bf=B_jack_diss_gains)),
+                     data.frame(betalink(mWeb2_c,mWeb1_c,bf=B_jack_diss_gains)),
+                     data.frame(betalink(mWeb2_pl,mWeb1_pl,bf=B_jack_diss_loss)),
+                     data.frame(betalink(mWeb2_h,mWeb1_h,bf=B_jack_diss_loss)),
+                     data.frame(betalink(mWeb2_c,mWeb1_c,bf=B_jack_diss_loss)))
   
   
   meta_change$Level<-c("Plants","Herbivores","Predators")
