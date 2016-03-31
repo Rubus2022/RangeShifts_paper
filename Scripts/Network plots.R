@@ -5,6 +5,8 @@ library(RColorBrewer)
 library(dplyr)
 library(betalink)
 library(igraph)
+library(viridis)
+library(NetIndices)
 
 source("./Functions/plotting_functions.R")
 
@@ -157,10 +159,14 @@ for(d in 1:length(dispV)){
     MeanInteract[l,,4]<-rowMeans(B31%*%X3[,l,])
   }
   if(d==1){
+    XN1<-X
+    XI1<-XI
     XM1<-XM
     X1<-X3
   } 
   if(d==2){
+    XN2<-X
+    XI2<-XI
     X2<-X3
     XM2<-XM
   }
@@ -177,3 +183,92 @@ meta_net_plot(Com = X1,Ints = B3,trophic = T,prop_links = 0.5,interactions = T)
 meta_net_plot(Com = X2,Ints = B3,trophic = T,prop_links = 0.5,interactions = T)
 meta_net_plot(Com = X3,Ints = B3,trophic = T,prop_links = 0.5,interactions = T)
 dev.off()
+
+
+Net_inds_3<-Net_ind_func(Com = XM1,Ints = BM)
+Net_inds_3$Dispersal<-0.001
+hold<-Net_ind_func(Com = XM2,Ints = BM)
+hold$Dispersal<-0.01
+Net_inds_3<-rbind(Net_inds_3,hold)
+hold<-Net_ind_func(Com = XM,Ints = BM)
+hold$Dispersal<-0.5
+Net_inds_3<-rbind(Net_inds_3,hold)
+Net_inds_3$Community<-"Mixed interactions"
+
+hold<-Net_ind_func(Com = X1,Ints = B3,trophic = T)
+hold$Dispersal<-0.001
+hold$Community<-"Food web"
+Net_inds_3<-rbind(Net_inds_3,hold)
+hold<-Net_ind_func(Com = X2,Ints = B3,trophic = T)
+hold$Dispersal<-0.01
+hold$Community<-"Food web"
+Net_inds_3<-rbind(Net_inds_3,hold)
+hold<-Net_ind_func(Com = X3,Ints = B3,trophic = T)
+hold$Dispersal<-0.5
+hold$Community<-"Food web"
+Net_inds_3<-rbind(Net_inds_3,hold)
+
+hold<-Net_ind_func(Com = XI1,Ints = BI)
+hold$Dispersal<-0.001
+hold$Community<-"Competition"
+Net_inds_3<-rbind(Net_inds_3,hold)
+hold<-Net_ind_func(Com = XI2,Ints = BI)
+hold$Dispersal<-0.01
+hold$Community<-"Competition"
+Net_inds_3<-rbind(Net_inds_3,hold)
+hold<-Net_ind_func(Com = XI,Ints = BI)
+hold$Dispersal<-0.5
+hold$Community<-"Competition"
+Net_inds_3<-rbind(Net_inds_3,hold)
+Net_inds_3$Disp_text<-paste("Dispersal =", Net_inds_3$Dispersal)
+
+Net_inds_3$Community<-factor(Net_inds_3$Community,levels = c("Competition","Mixed interactions","Food web"),ordered = T)
+
+#save(Net_inds_3,)
+
+ggplot(filter(Net_inds_3,Community!="No interactions"),aes(x=patch,y=time,fill=LD))+
+  geom_raster()+
+  facet_grid(Community~Disp_text)+
+  theme_bw(base_size = 12)+
+  removeGrid()+
+  scale_color_viridis(option = "D")+
+  scale_fill_viridis(option = "D")+
+  xlab("Patch")+
+  ylab("Time")
+ggsave(filename = "./Figures/Link density.png",width = 8,height = 8,dpi = 300)
+
+ggplot(filter(Net_inds_3,Community!="No interactions"),aes(x=patch,y=time,fill=C),color=NA)+
+  geom_raster()+
+  facet_grid(Community~Disp_text)+
+  theme_bw(base_size = 12)+
+  removeGrid()+
+  scale_color_viridis(option = "D")+
+  scale_fill_viridis(option = "D")+
+  xlab("Patch")+
+  ylab("Time")
+ggsave(filename = "./Figures/Connectance.png",width = 8,height = 8,dpi = 300)
+
+ggplot(filter(Net_inds_3,Community!="No interactions"),aes(x=patch,y=time,fill=Cbar),color=NA)+
+  geom_raster()+
+  facet_grid(Community~Disp_text)+
+  theme_bw(base_size = 12)+
+  removeGrid()+
+  scale_color_viridis(option = "D")+
+  scale_fill_viridis(option = "D")+
+  xlab("Patch")+
+  ylab("Time")
+ggsave(filename = "./Figures/Compartmentalization.png",width = 8,height = 8,dpi = 300)
+
+ggplot(filter(Net_inds_3,Community=="Food web"),aes(x=patch,y=time,fill=Trophic_levels),color=NA)+
+  geom_raster()+
+  facet_grid(.~Disp_text)+
+  theme_bw(base_size = 12)+
+  removeGrid()+
+  scale_color_viridis(option = "D")+
+  scale_fill_viridis(option = "D")+
+  xlab("Patch")+
+  ylab("Time")
+
+
+
+

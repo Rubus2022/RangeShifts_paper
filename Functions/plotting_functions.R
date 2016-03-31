@@ -55,7 +55,7 @@ meta_net_plot<-function(Com,Ints,trophic,prop_links=0.5,interactions=T){
   
   lay.mat<-lay.mat[order(lay.mat$order),]
   
-  network_betaplot(mWeb2,mWeb1,layout=as.matrix(lay.mat[,1:2]),nb = "red",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(0,1))
+  network_betaplot(mWeb2,mWeb1,layout=as.matrix(lay.mat[,1:2]),na = "red",nb = "dodgerblue",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(0,1))
 }
 
 local_net_plot<-function(Com_inits,Com_final,Ints,trophic,prop_links=0.5,interactions=T){
@@ -121,5 +121,36 @@ local_net_plot<-function(Com_inits,Com_final,Ints,trophic,prop_links=0.5,interac
   
   lay.mat<-lay.mat[order(lay.mat$order),]
   
-  network_betaplot(web1,web2,layout=as.matrix(lay.mat[,1:2]),nb = "red",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(0,1))
+  network_betaplot(web1,web2,layout=as.matrix(lay.mat[,1:2]),nb = "dodgerblue",na = "red",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(0,1))
 }
+
+Net_ind_func<-function(Com,Ints,trophic=F){
+    trophicV<-factor(c(rep("plant",nprey),rep("herbivore",npred1),rep("predator",npred2)),levels=c("plant","herbivore","predator"),ordered = T)
+  Ind_hold2<-apply(Com[,round(seq(2000,7000,length=100)),51:150],2,function(y){
+    Ind_hold<-apply(y,2,function(x){
+      Ints<-BM
+      Int_strength<-abs(Ints*rep(x,each=length(x)))
+      hold<-Int_strength[x>0,x>0]
+      hold2<-hold
+      #keepV<-round(sum(hold>0)*0.3)
+      #hold2[order(hold,decreasing = F)[1:(length(hold)-keepV)]]<-0
+      hold2[hold<mean(hold)]<-0
+      if(trophic==T){Trophic_levels<-sum(tapply(x>0,trophicV,sum)>0)} else{
+        Trophic_levels<-1
+      }
+      hold3<-data.frame(GenInd(hold2))
+      hold3$Trophic_levels<-Trophic_levels
+      return(hold3)
+    })
+    Ind_hold2<-do.call(rbind.data.frame,Ind_hold)
+    return(Ind_hold2)
+  })
+  
+
+  
+  Net_inds<-do.call(rbind.data.frame,Ind_hold2)
+  Net_inds$time<-rep(round(seq(2000,7000,length=100)),each=100)
+  Net_inds$patch<-51:150
+  return(Net_inds)
+}
+
