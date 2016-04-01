@@ -158,18 +158,20 @@ process_nets<-function(Com,Ints,trophic=F, interactions=T){
       group_by(Trophic,Part)%>%
       summarise_each(funs(mean(.,na.rm=T)))
     LnBL$Scale<-"Local network"
-    LnBL$Rep<-r
-    LnBL$Dispersal<-disp
+
     
     LnNI<-hold_NI%>%
       group_by(Trophic)%>%
       summarise_each(funs(mean(.,na.rm=T)))
     LnNI$Scale<-"Local network"
-    LnNI$Rep<-r
-    LnNI$Dispersal<-disp
     
     Trophic_BL<-rbind(regBL,rcBL,LnBL)
+    Trophic_BL$Rep<-r
+    Trophic_BL$Dispersal<-disp
     Trophic_NI<-rbind(regNI,rcNI,LnNI)
+    Trophic_NI$Rep<-r
+    Trophic_NI$Dispersal<-disp
+    
     return(list(betaLink,netInd,Trophic_BL,Trophic_NI))
     
   } else{
@@ -192,7 +194,7 @@ TN_process<-function(pre,post){
   pred_pre<-subgraph.edges(pre,eids = E(pre)[keep])
   
   #post
-  edgeTroph<-substring(ends(post,es=1:ecount(post)),1,1)
+  if(ecount(post)>0){edgeTroph<-substring(ends(post,es=1:ecount(post)),1,1)
   
   keep<-edgeTroph[,1]=="p" & edgeTroph[,2]=="p"
   plant_post<-subgraph.edges(post,eids = E(post)[keep])
@@ -203,7 +205,11 @@ TN_process<-function(pre,post){
   
   keep<-edgeTroph[,1]=="c" & edgeTroph[,2]=="h"
   keep<-(keep+(edgeTroph[,1]=="h" & edgeTroph[,2]=="c"))>0
-  pred_post<-subgraph.edges(post,eids = E(post)[keep])
+  pred_post<-subgraph.edges(post,eids = E(post)[keep])} else{
+    plant_post<-post
+    herb_post<-post
+    pred_post<-post
+  }
   
   #betalink
   beta_troph<-rbind.data.frame(betalink2(plant_pre,plant_post,bf = B_jack_diss),
