@@ -312,18 +312,18 @@ rShift_sim<-function(){
   
   #variation in colonization rate####
   Shift_sd_func<-function(){
-    speedV<-array(NA, dim=c(80,3000,4))
+    speedV<-array(NA, dim=c(80,length(sampleV),4))
     if(r==1){
-      for(i in 1:3000){
-        speedV[,i,1]<-apply(X[,i+2000,51:150]>1,1,which.max)
-        speedV[,i,2]<-apply(XI[,i+2000,51:150]>1,1,which.max)
-        speedV[,i,3]<-apply(XM[,i+2000,51:150]>1,1,which.max)
-        speedV[,i,4]<-apply(X3[,i+2000,51:150]>1,1,which.max)
+      for(i in 1:length(sampleV)){
+        speedV[,i,1]<-apply(X_save[,51:150,i]>1,1,which.max)
+        speedV[,i,2]<-apply(XI_save[,51:150,i]>1,1,which.max)
+        speedV[,i,3]<-apply(XM_save[,51:150,i]>1,1,which.max)
+        speedV[,i,4]<-apply(X3_save[,51:150,i]>1,1,which.max)
       }} else{
-        for(i in 1:3000){
-          speedV[,i,2]<-apply(XI[,i+2000,51:150]>1,1,which.max)
-          speedV[,i,3]<-apply(XM[,i+2000,51:150]>1,1,which.max)
-          speedV[,i,4]<-apply(X3[,i+2000,51:150]>1,1,which.max)
+        for(i in 1:length(sampleV)){
+          speedV[,i,2]<-apply(XI_save[,51:150,i]>1,1,which.max)
+          speedV[,i,3]<-apply(XM_save[,51:150,i]>1,1,which.max)
+          speedV[,i,4]<-apply(X3_save[,51:150,i]>1,1,which.max)
         }
       }
     speedV[speedV==1]<-NA
@@ -462,6 +462,10 @@ rShift_sim<-function(){
     XI<-matrix(10,n,nCom)
     XM<-X3<-X<-XI
     XIt<-XMt<-X3t<-Xt<-XI
+    
+    sampleV<-seq(2000,5000,by=10)
+    X_save<-array(NA,dim=c(n,nCom,length(sampleV)))
+    XI_save<-XM_save<-X3_save<-X_save
 
     for(l in 1:(length(StressV)-1)){
       Xt<-X*exp(rep(C,nCom)+BN%*%X+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(X))*disp-disp*X
@@ -487,6 +491,13 @@ rShift_sim<-function(){
         XIhold<-XI
         XMhold<-XM
         X3hold<-X3
+      }
+      if(sum(l==sampleV)==1){
+        samp<-which(l==sampleV)
+        X_save[,,samp]<-X
+        XI_save[,,samp]<-XI
+        XM_save[,,samp]<-XM
+        X3_save[,,samp]<-X3
       }
     }
     
