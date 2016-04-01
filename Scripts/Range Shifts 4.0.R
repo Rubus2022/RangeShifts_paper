@@ -3,10 +3,13 @@ library(ggplot2)
 library(ggExtra)
 library(RColorBrewer)
 library(dplyr)
+library(tidyr)
 library(betalink)
 library(igraph)
+library(viridis)
+library(NetIndices)
 
-source("./Functions/betalink_compare.r")
+source("./Functions/process_nets.R")
 
 dispV<-c(0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.5,1)
 reps<-10
@@ -82,6 +85,8 @@ for(r in 1:reps){
   preyV<-1:nprey
   pred1V<-(nprey+1):(nprey+npred1)
   pred2V<-(n-npred2+1):(n)
+  trophicV<-factor(c(rep("plant",nprey),rep("herbivore",npred1),rep("predator",npred2)),levels=c("plant","herbivore","predator"),ordered = T)
+  
   
   b11=-0.1
   b12=-0.3
@@ -159,82 +164,45 @@ for(r in 1:reps){
       MeanInteract[l,,4]<-rowMeans(B31%*%X3[,l,])
     }
 
+    
+    Comp<-process_nets(Com=XI,Ints = BI)
+    Mixed<-process_nets(Com=XM,Ints = BM)
+    FW<-process_nets(Com=X3,Ints = B3,trophic = T)
+    
     if(r==1){
-      Net_shift.temp<-rbind(betalink_min(Com=X,Ints = BN,prop_links = 0.5,trophic = F,interactions = F,plot=T),
-                            betalink_min(Com=XI,Ints = BI,prop_links = 0.5,trophic = F,plot=T),
-                            betalink_min(Com=XM,Ints = BM,prop_links = 0.5,trophic = F, plot=T),
-                            betalink_min(Com=X3,Ints = B3,prop_links = 0.5,trophic = T, plot=T))
-      Net_shift.temp<-as.data.frame(Net_shift.temp)
-      Net_shift.temp<-rbind(Net_shift.temp,
-                            meta_net_turn(Com = X,Ints = BN,trophic = F,interactions = F),
-                            meta_net_turn(Com = XI,Ints = BI,trophic = F),
-                            meta_net_turn(Com = XM,Ints = BM,trophic = F),
-                            meta_net_turn(Com = X3,Ints = B3,trophic = T))
+      NoInt<-process_nets(Com=X,Ints = BN,interactions = F)
       
-      Net_shift.temp$Rep<-r
-      Net_shift.temp$Dispersal<-disp
-      Net_shift.temp$Interactions<-rep(rep(c("No interactions","Competitive","Mixed","Food web"), each=3))
+      BL_temp<-rbind.data.frame(NoInt[[1]],Comp[[1]],Mixed[[1]],FW[[1]])
+      BL_temp$Community<-factor(rep(c("No interactions","Competitive","Mixed","Food web"), each=9),levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
+      NI_temp<-rbind.data.frame(NoInt[[2]],Comp[[2]],Mixed[[2]],FW[[2]])
+      NI_temp$Community<-factor(rep(c("No interactions","Competitive","Mixed","Food web"), each=4),levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
+      
     } else{
-            Net_shift.temp<-rbind(betalink_min(Com=XI,Ints = BI,prop_links = 0.5,trophic = F,plot=F),
-                                  betalink_min(Com=XM,Ints = BM,prop_links = 0.5,trophic = F, plot=F),
-                                  betalink_min(Com=X3,Ints = B3,prop_links = 0.5,trophic = T, plot=F))
-            Net_shift.temp<-as.data.frame(Net_shift.temp)
-            Net_shift.temp<-rbind(Net_shift.temp,
-                  meta_net_turn(Com = XI,Ints = BI,trophic = F),
-                  meta_net_turn(Com = XM,Ints = BM,trophic = F),
-                  meta_net_turn(Com = X3,Ints = B3,trophic = T))
-            
-            Net_shift.temp$Rep<-r
-            Net_shift.temp$Dispersal<-disp
-            Net_shift.temp$Interactions<-rep(c("Competitive","Mixed","Food web"), each=3)
+    BL_temp<-rbind.data.frame(Comp[[1]],Mixed[[1]],FW[[1]])
+    BL_temp$Community<-factor(rep(c("Competitive","Mixed","Food web"), each=9),levels = c("Competitive","Mixed","Food web"),ordered = T)
+    NI_temp<-rbind.data.frame(Comp[[2]],Mixed[[2]],FW[[2]])
+    NI_temp$Community<-factor(rep(c("Competitive","Mixed","Food web"), each=4),levels = c("Competitive","Mixed","Food web"),ordered = T)
     }
     
-    Trophic.shift.temp<-rbind(betalink_min_trophic(Com = X3,Ints = B3,prop_links = 0.5,plot = F),
-                              meta_net_turn_trophic(Com = X3,Ints = B3,prop_links = 0.5))
- 
-    Trophic.shift.temp$Rep<-r
-    Trophic.shift.temp$Dispersal<-disp
+    BL_FW_temp<-FW[[3]]
+    NI_FW_temp<-FW[[4]]
+    
+    Shift_temp<-Shift_sd_func()
+   
     
     if(r==1 & d==1){
-      Net_shift.df<-Net_shift.temp
-      Trophic.shift.df<-Trophic.shift.temp
-    } else {Net_shift.df<-rbind(Net_shift.df,Net_shift.temp)
-    Trophic.shift.df<-rbind(Trophic.shift.df,Trophic.shift.temp)
+      Net_shift.df<-BL_temp
+      Net_shift_troph.df<-BL_FW_temp
+      Net_ind.df<-NI_temp
+      Net_ind_troph.df<-NI_FW_temp
+      Shift.df<-Shift_temp
+    } else {
+      Net_shift.df<-rbind(Net_shift.df,BL_temp)
+      Net_shift_troph.df<-rbind(Net_shift_troph.df,BL_FW_temp)
+      Net_ind.df<-rbind(Net_ind.df,NI_temp)
+      Net_ind_troph.df<-rbind(Net_ind_troph.df,NI_FW_temp)
+      Shift.df<-rbind(Shift.df,Shift_temp)
     }
-  
-    
-    
-    
-    # Turnover.df.temp<-rbind(Com_compare(X,Int_type = "None",Trophic = "No"),
-    #                         Com_compare(XI,Int_type = "Competitive",Trophic = "No"),
-    #                         Com_compare(XM,Int_type = "Mixed",Trophic = "No"),
-    #                         Com_compare(X3,Int_type = "Food web", Trophic = "No"))
-    # 
-    # 
-    # Turnover.means.temp<-Turnover.df.temp%>%
-    #   group_by(F_patch,I_patch,Interactions,Dispersal,Trophic)%>%
-    #   mutate(Total_turnover=max(Turnover))%>%
-    #   group_by(F_patch,Interactions,Dispersal,Trophic)%>%
-    #   filter(Total_turnover==min(Total_turnover))%>%
-    #   group_by(Type,Interactions,Dispersal,Trophic)%>%
-    #   summarise(Turnover=mean(Turnover),Distance=mean(F_patch-I_patch))
-    # 
-    # #calculate speed and variability of range shift
-    # rShift.df_temp<-rbind(rSpeedVary(X,Int_type = "None",Trophic = "No"),
-    #                       rSpeedVary(XI,Int_type = "Competitive",Trophic = "No"),
-    #                       rSpeedVary(XM,Int_type = "Mixed",Trophic = "No"),
-    #                       rSpeedVary(X3,Int_type = "Food web",Trophic = "No"),
-    #                       rSpeedVary(X3[preyV,,],Int_type = "Plants",Trophic = "Yes"),
-    #                       rSpeedVary(X3[pred1V,,],Int_type = "Herbivores",Trophic = "Yes"),
-    #                       rSpeedVary(X3[pred2V,,],Int_type = "Predators",Trophic = "Yes"))
-    # 
-    # 
-    # if(r==1 & d==1){
-    #   rShift.df<-rShift.df_temp
-    #   Turn_mean<-Turnover.means.temp
-    # } else {rShift.df<-rbind(rShift.df,rShift.df_temp)
-    # Turn_mean<-rbind(Turn_mean,Turnover.means.temp)}
-    
   }  
 };close(pb)
 
