@@ -12,7 +12,7 @@ library(NetIndices)
 source("./Functions/process_nets.R")
 
 dispV<-c(0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.5,1)
-reps<-10
+reps<-2
 dd<-c(0.3,0.2,0.1)#kernel decay strength
 FoodWeb<-c("NoInt","Comp","Mixed","Plants","Herb","Pred") 
 
@@ -158,10 +158,10 @@ for(r in 1:reps){
       XM[,l+1,][!is.finite(XM[,l+1,])]<-0
       XM[,l+1,][(XM[,l+1,]<10^-3)]<-0
       
-      MeanInteract[l,,1]<-rowMeans(BN1%*%X[,l,])
-      MeanInteract[l,,2]<-rowMeans(BI1%*%XI[,l,])
-      MeanInteract[l,,3]<-rowMeans(BM1%*%XM[,l,])
-      MeanInteract[l,,4]<-rowMeans(B31%*%X3[,l,])
+      # MeanInteract[l,,1]<-rowMeans(BN1%*%X[,l,])
+      # MeanInteract[l,,2]<-rowMeans(BI1%*%XI[,l,])
+      # MeanInteract[l,,3]<-rowMeans(BM1%*%XM[,l,])
+      # MeanInteract[l,,4]<-rowMeans(B31%*%X3[,l,])
     }
 
     
