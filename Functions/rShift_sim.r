@@ -15,7 +15,7 @@ rShift_sim<-function(){
       (b)/(a+b+c)
     })}
   
-  process_nets<-function(Com,Ints,trophic=F, interactions=T){
+  process_nets<-function(Initial,Final,Ints,trophic=F, interactions=T){
     if(interactions==F){Ints<-matrix(1,80,80)} 
     diag(Ints)<-0
     if(trophic==T){
@@ -23,7 +23,7 @@ rShift_sim<-function(){
         colnames(Ints)<-rownames(Ints)<-paste("s",1:n)}
     
     #generate pre warming networks
-    nets_pre<-apply(Com[,burnL,51:150],2,function(x){
+    nets_pre<-apply(Initial[,51:150],2,function(x){
       Int_strength<-abs(Ints*rep(x,each=n))
       Int_strength[x==0,]<-0
       mean_Int_strength<-mean(Int_strength[Int_strength>0])
@@ -35,7 +35,7 @@ rShift_sim<-function(){
     })
     
     #generate post warming networks
-    nets_post<-apply(Com[,l+1,51:150],2,function(x){
+    nets_post<-apply(Final[,51:150],2,function(x){
       Int_strength<-abs(Ints*rep(x,each=n))
       Int_strength[x==0,]<-0
       mean_Int_strength<-mean(Int_strength[Int_strength>0])
@@ -78,7 +78,7 @@ rShift_sim<-function(){
     netInd_cR$Trophic_levels<-length(unique(substring(V(rcWeb_post)$name,1,1)))/length(unique(substring(V(rcWeb_pre)$name,1,1)))
     
     #Local networks
-    nets_bin<-apply(cbind(Com[,burnL,1:150],Com[,l+1,101:150]),2,function(x){
+    nets_bin<-apply(cbind(Initial[,1:150],Final[,101:150]),2,function(x){
       Int_strength<-abs(Ints*rep(x,each=n))
       Int_strength[x==0,]<-0
       mean_Int_strength<-mean(Int_strength[Int_strength>0])
@@ -459,40 +459,41 @@ rShift_sim<-function(){
   for(d in 1:length(dispV)){
     disp<-dispV[d]
     
-    XI=array(NA,dim=c(n,length(StressV),nCom))
-    XI[,1,]=10
+    XI<-matrix(10,n,nCom)
     XM<-X3<-X<-XI
-    MeanInteract<-array(NA,dim=c(length(StressV)-1,n,4))
-    
+    XIt<-XMt<-X3t<-Xt<-XI
+
     for(l in 1:(length(StressV)-1)){
-      X[,l+1,]<-X[,l,]*exp(rep(C,nCom)+BN%*%X[,l,]+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(X[,l,]))*disp-disp*X[,l,]
-      X[,l+1,][(X[,l+1,]<10^-3)]<-0
+      Xt<-X*exp(rep(C,nCom)+BN%*%X+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(X))*disp-disp*X
+      Xt[Xt<10^-3]<-0
+      X<-Xt
+
+      XIt<-XI*exp(rep(C,nCom)+BI%*%XI+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(XI))*disp-disp*XI
+      XIt[XIt<10^-3]<-0
+      XI<-XIt
       
-      XI[,l+1,]<-XI[,l,]*exp(rep(C,nCom)+BI%*%XI[,l,]+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(XI[,l,]))*disp-disp*XI[,l,]
-      XI[,l+1,][(XI[,l+1,]<10^-3)]<-0
-      
-      X3[preyV,l+1,]<-X3[preyV,l,]*exp(rep(C3[preyV],nCom)+B3[preyV,]%*%X3[,l,]+t(A3[(ComStart+Stress[StressV[l]]),preyV]))+t(Disp_pl%*%t(X3[preyV,l,]))*disp-disp*X3[preyV,l,]
-      X3[preyV,l+1,][(X3[preyV,l+1,]<10^-3)]<-0
-      X3[pred1V,l+1,]<-X3[pred1V,l,]*exp(rep(C3[pred1V],nCom)+B3[pred1V,]%*%X3[,l,]+t(A3[(ComStart+Stress[StressV[l]]),pred1V]))+t(Disp_h%*%t(X3[pred1V,l,]))*disp-disp*X3[pred1V,l,]
-      X3[pred1V,l+1,][(X3[pred1V,l+1,]<10^-3)]<-0
-      X3[pred2V,l+1,]<-X3[pred2V,l,]*exp(rep(C3[pred2V],nCom)+B3[pred2V,]%*%X3[,l,]+t(A3[(ComStart+Stress[StressV[l]]),pred2V]))+t(Disp_pr%*%t(X3[pred2V,l,]))*disp-disp*X3[pred2V,l,]
-      X3[pred2V,l+1,][(X3[pred2V,l+1,]<10^-3)]<-0
-      
-      
-      XM[,l+1,]<-XM[,l,]*exp(rep(C,nCom)+BM%*%XM[,l,]+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(XM[,l,]))*disp-disp*XM[,l,]
-      XM[,l+1,][!is.finite(XM[,l+1,])]<-0
-      XM[,l+1,][(XM[,l+1,]<10^-3)]<-0
-      
-      # MeanInteract[l,,1]<-rowMeans(BN1%*%X[,l,])
-      # MeanInteract[l,,2]<-rowMeans(BI1%*%XI[,l,])
-      # MeanInteract[l,,3]<-rowMeans(BM1%*%XM[,l,])
-      # MeanInteract[l,,4]<-rowMeans(B31%*%X3[,l,])
+      XMt<-XM*exp(rep(C,nCom)+BM%*%XM+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(XM))*disp-disp*XM
+      XMt[!is.finite(XMt)]<-0
+      XMt[(XMt<10^-3)]<-0
+      XM<-XMt
+
+      X3t[preyV,]<-X3[preyV,]*exp(rep(C3[preyV],nCom)+B3[preyV,]%*%X3+t(A3[(ComStart+Stress[StressV[l]]),preyV]))+t(Disp_pl%*%t(X3[preyV,]))*disp-disp*X3[preyV,]
+      X3t[pred1V,]<-X3[pred1V,]*exp(rep(C3[pred1V],nCom)+B3[pred1V,]%*%X3+t(A3[(ComStart+Stress[StressV[l]]),pred1V]))+t(Disp_h%*%t(X3[pred1V,]))*disp-disp*X3[pred1V,]
+      X3[pred2V,]<-X3[pred2V,]*exp(rep(C3[pred2V],nCom)+B3[pred2V,]%*%X3+t(A3[(ComStart+Stress[StressV[l]]),pred2V]))+t(Disp_pr%*%t(X3[pred2V,]))*disp-disp*X3[pred2V,]
+      X3t[(X3t<10^-3)]<-0
+      X3<-X3t
+      if(l==2000){
+        Xhold<-X
+        XIhold<-XI
+        XMhold<-XM
+        X3hold<-X3
+      }
     }
     
-    NoInt<-process_nets(Com=X,Ints = BN,interactions = F)
-    Comp<-process_nets(Com=XI,Ints = BI)
-    Mixed<-process_nets(Com=XM,Ints = BM)
-    FW<-process_nets(Com=X3,Ints = B3,trophic = T)
+    NoInt<-process_nets(Initial=Xhold,Final=X,Ints = BN,interactions = F)
+    Comp<-process_nets(Initial=XIhold,Final=XI,Ints = BI)
+    Mixed<-process_nets(Initial=XMhold,Final=XM,Ints = BM)
+    FW<-process_nets(Initial=X3hold,Final=X3,Ints = B3,trophic = T)
     
     BL_temp<-rbind.data.frame(NoInt[[1]],Comp[[1]],Mixed[[1]],FW[[1]])
     BL_temp$Community<-factor(rep(c("No interactions","Competitive","Mixed","Food web"), each=9),levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
