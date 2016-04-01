@@ -226,6 +226,17 @@ Net_inds_3$Community<-factor(Net_inds_3$Community,levels = c("Competition","Mixe
 
 #save(Net_inds_3,)
 
+ggplot(filter(Net_inds_3,Community!="No interactions"),aes(x=patch,y=time,fill=N))+
+  geom_raster()+
+  facet_grid(Community~Disp_text)+
+  theme_bw(base_size = 12)+
+  removeGrid()+
+  scale_color_viridis(option = "D")+
+  scale_fill_viridis(option = "D")+
+  xlab("Patch")+
+  ylab("Time")
+ggsave(filename = "./Figures/Species richness.png",width = 8,height = 8,dpi = 300)
+
 ggplot(filter(Net_inds_3,Community!="No interactions"),aes(x=patch,y=time,fill=LD))+
   geom_raster()+
   facet_grid(Community~Disp_text)+
@@ -268,7 +279,5 @@ ggplot(filter(Net_inds_3,Community=="Food web"),aes(x=patch,y=time,fill=Trophic_
   scale_fill_viridis(option = "D")+
   xlab("Patch")+
   ylab("Time")
-
-
-
+ggsave(filename = "./Figures/Trophic levels.png",width = 8,height = 5,dpi = 300)
 
