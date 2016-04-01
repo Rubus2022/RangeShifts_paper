@@ -13,9 +13,8 @@ B_jack_diss_loss<-function(pm){
     (b)/(a+b+c)
   })}
 
-
 process_nets<-function(Com,Ints,trophic=F, interactions=T){
-  if(interactions==F){Ints<-matrix(1,n,n)} 
+  if(interactions==F){Ints<-matrix(1,80,80)} 
   diag(Ints)<-0
   if(trophic==T){
     colnames(Ints)<-rownames(Ints)<-c(paste("p",1:nprey),paste('h',1:npred1),paste("c",1:npred2))} else {
