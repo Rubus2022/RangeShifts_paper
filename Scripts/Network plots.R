@@ -170,18 +170,18 @@ for(d in 1:length(dispV)){
     X2<-X3
     XM2<-XM
   }
-  meta_net_plot(Com = X3,Ints = B3,trophic = T,prop_links = 0.5,interactions = T)
+  #meta_net_plot(Com = X3,Ints = B3,trophic = T,prop_links = 0.5,interactions = T)
 }
 
 pdf("./Figures/Local and regional network change.pdf",width = 11,height = 10)
 par(mfrow=c(2,3))
-local_net_plot(Com_inits = X1[,2000,],Com_final = X1[,7000,105],Ints = B3,trophic = T,prop_links = 0.5)
-local_net_plot(Com_inits = X2[,2000,],Com_final = X2[,7000,105],Ints = B3,trophic = T,prop_links = 0.5)
-local_net_plot(Com_inits = X3[,2000,],Com_final = X3[,7000,105],Ints = B3,trophic = T,prop_links = 0.5)
+local_net_plot(Com_inits = X1[,2000,],Com_final = X1[,7000,105],Ints = B3,trophic = T)
+local_net_plot(Com_inits = X2[,2000,],Com_final = X2[,7000,105],Ints = B3,trophic = T)
+local_net_plot(Com_inits = X3[,2000,],Com_final = X3[,7000,105],Ints = B3,trophic = T)
 
-meta_net_plot(Com = X1,Ints = B3,trophic = T,prop_links = 0.5,interactions = T)
-meta_net_plot(Com = X2,Ints = B3,trophic = T,prop_links = 0.5,interactions = T)
-meta_net_plot(Com = X3,Ints = B3,trophic = T,prop_links = 0.5,interactions = T)
+meta_net_plot(Com = X1,Ints = B3,trophic = T,interactions = T)
+meta_net_plot(Com = X2,Ints = B3,trophic = T,interactions = T)
+meta_net_plot(Com = X3,Ints = B3,trophic = T,interactions = T)
 dev.off()
 
 
@@ -231,8 +231,10 @@ ggplot(filter(Net_inds_3,Community!="No interactions"),aes(x=patch,y=time,fill=N
   facet_grid(Community~Disp_text)+
   theme_bw(base_size = 12)+
   removeGrid()+
-  scale_color_viridis(option = "D")+
-  scale_fill_viridis(option = "D")+
+  scale_colour_gradientn(colors=rainbow(100))+
+  scale_fill_gradientn(colors=rainbow(100,v = 1))+
+  #scale_color_viridis(option = "D")+
+  #scale_fill_viridis(option = "D")+
   xlab("Patch")+
   ylab("Time")
 ggsave(filename = "./Figures/Species richness.png",width = 8,height = 8,dpi = 300)
