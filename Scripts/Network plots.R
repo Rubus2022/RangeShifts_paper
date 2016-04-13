@@ -224,17 +224,25 @@ Net_inds_3$Disp_text<-paste("Dispersal =", Net_inds_3$Dispersal)
 
 Net_inds_3$Community<-factor(Net_inds_3$Community,levels = c("Competition","Mixed interactions","Food web"),ordered = T)
 
-#save(Net_inds_3,)
+sampleV<-seq(2000,7000,by=50)
+
+Com_list<-list(Comp1=XI1[,sampleV,51:150],Comp2=XI2[,sampleV,51:150],Comp3=XI[,sampleV,51:150],
+               Mix1=XM1[,sampleV,51:150],Mix2=XM2[,sampleV,51:150],Mix3=XM[,sampleV,51:150],
+               FW1=X1[,sampleV,51:150],FW2=X2[,sampleV,51:150],FW3=X3[,sampleV,51:150])
+
+Int_list<-list(BI=BI,BM=BM,B3=B3)
+
+save(Net_inds_3,Com_list,Int_list,file="Range shift heatplots.RData")
 
 ggplot(filter(Net_inds_3,Community!="No interactions"),aes(x=patch,y=time,fill=N))+
   geom_raster()+
   facet_grid(Community~Disp_text)+
   theme_bw(base_size = 12)+
   removeGrid()+
-  scale_colour_gradientn(colors=rainbow(100))+
-  scale_fill_gradientn(colors=rainbow(100,v = 1))+
-  #scale_color_viridis(option = "D")+
-  #scale_fill_viridis(option = "D")+
+  #scale_colour_gradientn(colors=rainbow(100))+
+  #scale_fill_gradientn(colors=rainbow(100,v = 1))+
+  scale_color_viridis(option = "D")+
+  scale_fill_viridis(option = "D")+
   xlab("Patch")+
   ylab("Time")
 ggsave(filename = "./Figures/Species richness.png",width = 8,height = 8,dpi = 300)
