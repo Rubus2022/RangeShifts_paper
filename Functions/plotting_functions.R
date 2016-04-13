@@ -113,7 +113,7 @@ local_net_plot<-function(Com_inits,Com_final,Ints,trophic,prop_links=0.5,interac
 
 Net_ind_func<-function(Com,Ints,trophic=F){
     trophicV<-factor(c(rep("plant",nprey),rep("herbivore",npred1),rep("predator",npred2)),levels=c("plant","herbivore","predator"),ordered = T)
-  Ind_hold2<-apply(Com[,round(seq(2000,7000,length=100)),51:150],2,function(y){
+  Ind_hold2<-apply(Com[,seq(2000,7000,by=50),51:150],2,function(y){
     Ind_hold<-apply(y,2,function(x){
       Ints<-BM
       Int_strength<-abs(Ints*rep(x,each=length(x)))
@@ -136,7 +136,7 @@ Net_ind_func<-function(Com,Ints,trophic=F){
 
   
   Net_inds<-do.call(rbind.data.frame,Ind_hold2)
-  Net_inds$time<-rep(round(seq(2000,7000,length=100)),each=100)
+  Net_inds$time<-rep(seq(2000,7000,by=50),each=100)
   Net_inds$patch<-51:150
   return(Net_inds)
 }
