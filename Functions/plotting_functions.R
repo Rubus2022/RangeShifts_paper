@@ -98,6 +98,7 @@ local_net_plot<-function(Com_inits,Com_final,Ints,trophic,prop_links=0.5,interac
   fullweb<-metaweb(list(web1,web2))
   vcount(fullweb)
   
+  if(trophic==T){
   lay.mat<-data.frame(x=runif(vcount(fullweb)),y=as.numeric(factor(substring(V(fullweb)$name,1,1),levels = c("p","h","c"),ordered = T)),shape=as.numeric(factor(substring(V(fullweb)$name,1,1),levels = c("p","h","c"),ordered = T)),num=as.numeric(substring(V(fullweb)$name,3,4)), order=1:vcount(fullweb))
   lay.mat<-lay.mat%>%
     arrange(num)%>%
@@ -107,9 +108,23 @@ local_net_plot<-function(Com_inits,Com_final,Ints,trophic,prop_links=0.5,interac
     mutate(y=replace(y,y==2,2.25), y=replace(y,y==1,jitter(y[y==1],amount = 0.3)))
   
   lay.mat<-lay.mat[order(lay.mat$order),]
-  
-  network_betaplot(web1,web2,layout=as.matrix(lay.mat[,1:2]),ns = "dodgerblue3",nb = "grey",na = "forestgreen",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(0,1))
-}
+  par(pty='s')
+  network_betaplot(web1,web2,layout=as.matrix(lay.mat[,1:2]),ns = "dodgerblue3",na = "#ff7f00",nb = "grey",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(-0.1,1.1))
+  } else {
+    lay.mat<-as.data.frame(layout_in_circle(fullweb))
+    set.seed(2)
+    lay.mat<-lay.mat[sample(1:vcount(fullweb),vcount(fullweb),replace=F),]
+    lay.mat$name<-V(fullweb)$name
+    
+    nets_namesV<-V(metaweb(list(web1,web2)))$name
+    
+    lay.mat_sub<-lay.mat%>%
+      filter(name %in% nets_namesV)
+    lay.mat_sub<-lay.mat_sub[match(nets_namesV,lay.mat_sub$name),]
+    par(pty='s')
+    network_betaplot(web1,web2,layout=as.matrix(lay.mat_sub[,1:2]),ns = "dodgerblue3",na = "#ff7f00",nb = "grey",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, xlim=c(-1,1), ylim=c(-1,1))
+  }
+  }
 
 Net_ind_func<-function(Com,Ints,trophic=F){
     trophicV<-factor(c(rep("plant",nprey),rep("herbivore",npred1),rep("predator",npred2)),levels=c("plant","herbivore","predator"),ordered = T)
