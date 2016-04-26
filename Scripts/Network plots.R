@@ -5,6 +5,7 @@ library(RColorBrewer)
 library(dplyr)
 library(betalink)
 library(igraph)
+library(RInSp)
 library(viridis)
 library(NetIndices)
 
@@ -173,18 +174,6 @@ for(d in 1:length(dispV)){
   #meta_net_plot(Com = X3,Ints = B3,trophic = T,prop_links = 0.5,interactions = T)
 }
 
-pdf("./Figures/Local and regional network change.pdf",width = 11,height = 10)
-par(mfrow=c(2,3))
-local_net_plot(Com_inits = X1[,2000,],Com_final = X1[,7000,105],Ints = B3,trophic = T)
-local_net_plot(Com_inits = X2[,2000,],Com_final = X2[,7000,105],Ints = B3,trophic = T)
-local_net_plot(Com_inits = X3[,2000,],Com_final = X3[,7000,105],Ints = B3,trophic = T)
-
-meta_net_plot(Com = X1,Ints = B3,trophic = T,interactions = T)
-meta_net_plot(Com = X2,Ints = B3,trophic = T,interactions = T)
-meta_net_plot(Com = X3,Ints = B3,trophic = T,interactions = T)
-dev.off()
-
-
 Net_inds_3<-Net_ind_func(Com = XM1,Ints = BM)
 Net_inds_3$Dispersal<-0.001
 hold<-Net_ind_func(Com = XM2,Ints = BM)
@@ -232,9 +221,9 @@ Com_list<-list(Comp1=XI1[,sampleV,51:150],Comp2=XI2[,sampleV,51:150],Comp3=XI[,s
 
 Int_list<-list(BI=BI,BM=BM,B3=B3)
 
-save(Net_inds_3,Com_list,Int_list,file="Range shift heatplots.RData")
+save(Net_inds_3,Com_list,Int_list,file="./Workspace/Range_shift_heatplots.RData")
 
-ggplot(filter(Net_inds_3,Community!="No interactions"),aes(x=patch,y=time,fill=N))+
+ggplot(filter(Net_inds_3,Community!="No interactions"),aes(y=patch,x=time,fill=N))+
   geom_raster()+
   facet_grid(Community~Disp_text)+
   theme_bw(base_size = 12)+
@@ -243,51 +232,64 @@ ggplot(filter(Net_inds_3,Community!="No interactions"),aes(x=patch,y=time,fill=N
   #scale_fill_gradientn(colors=rainbow(100,v = 1))+
   scale_color_viridis(option = "D")+
   scale_fill_viridis(option = "D")+
-  xlab("Patch")+
-  ylab("Time")
+  ylab("Patch")+
+  xlab("Time")
 ggsave(filename = "./Figures/Species richness.png",width = 8,height = 8,dpi = 300)
 
-ggplot(filter(Net_inds_3,Community!="No interactions"),aes(x=patch,y=time,fill=LD))+
+ggplot(filter(Net_inds_3,Community!="No interactions"),aes(y=patch,x=time,fill=LD))+
   geom_raster()+
   facet_grid(Community~Disp_text)+
   theme_bw(base_size = 12)+
   removeGrid()+
   scale_color_viridis(option = "D")+
   scale_fill_viridis(option = "D")+
-  xlab("Patch")+
-  ylab("Time")
+  ylab("Patch")+
+  xlab("Time")
 ggsave(filename = "./Figures/Link density.png",width = 8,height = 8,dpi = 300)
 
-ggplot(filter(Net_inds_3,Community!="No interactions"),aes(x=patch,y=time,fill=C),color=NA)+
+ggplot(filter(Net_inds_3,Community!="No interactions"),aes(y=patch,x=time,fill=C),color=NA)+
   geom_raster()+
   facet_grid(Community~Disp_text)+
   theme_bw(base_size = 12)+
   removeGrid()+
   scale_color_viridis(option = "D")+
   scale_fill_viridis(option = "D")+
-  xlab("Patch")+
-  ylab("Time")
+  ylab("Patch")+
+  xlab("Time")
 ggsave(filename = "./Figures/Connectance.png",width = 8,height = 8,dpi = 300)
 
-ggplot(filter(Net_inds_3,Community!="No interactions"),aes(x=patch,y=time,fill=Cbar),color=NA)+
+ggplot(filter(Net_inds_3,Community!="No interactions"),aes(y=patch,x=time,fill=Cbar),color=NA)+
   geom_raster()+
   facet_grid(Community~Disp_text)+
   theme_bw(base_size = 12)+
   removeGrid()+
   scale_color_viridis(option = "D")+
   scale_fill_viridis(option = "D")+
-  xlab("Patch")+
-  ylab("Time")
+  ylab("Patch")+
+  xlab("Time")
 ggsave(filename = "./Figures/Compartmentalization.png",width = 8,height = 8,dpi = 300)
 
-ggplot(filter(Net_inds_3,Community=="Food web"),aes(x=patch,y=time,fill=Trophic_levels),color=NA)+
+ggplot(filter(Net_inds_3,Community=="Food web"),aes(y=patch,x=time,fill=Trophic_levels),color=NA)+
   geom_raster()+
   facet_grid(.~Disp_text)+
   theme_bw(base_size = 12)+
   removeGrid()+
   scale_color_viridis(option = "D")+
   scale_fill_viridis(option = "D")+
-  xlab("Patch")+
-  ylab("Time")
+  ylab("Patch")+
+  xlab("Time")
 ggsave(filename = "./Figures/Trophic levels.png",width = 8,height = 5,dpi = 300)
+
+ggplot(filter(Net_inds_3,Community!="No interactions"),aes(y=patch,x=time,fill=Nestedness))+
+  geom_raster()+
+  facet_grid(Community~Disp_text)+
+  theme_bw(base_size = 12)+
+  removeGrid()+
+  #scale_colour_gradientn(colors=rainbow(100))+
+  #scale_fill_gradientn(colors=rainbow(100,v = 1))+
+  scale_color_viridis(option = "D")+
+  scale_fill_viridis(option = "D")+
+  ylab("Patch")+
+  xlab("Time")
+ggsave(filename = "./Figures/Nestedness.png",width = 8,height = 8,dpi = 300)
 

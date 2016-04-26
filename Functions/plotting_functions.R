@@ -126,6 +126,10 @@ local_net_plot<-function(Com_inits,Com_final,Ints,trophic,prop_links=0.5,interac
   }
   }
 
+nest_fun2<-function(net){
+    return(NODF(import.RInSp(net))$NODF)
+}
+
 Net_ind_func<-function(Com,Ints,trophic=F){
     trophicV<-factor(c(rep("plant",nprey),rep("herbivore",npred1),rep("predator",npred2)),levels=c("plant","herbivore","predator"),ordered = T)
   Ind_hold2<-apply(Com[,seq(2000,7000,by=50),51:150],2,function(y){
@@ -141,6 +145,7 @@ Net_ind_func<-function(Com,Ints,trophic=F){
         Trophic_levels<-1
       }
       hold3<-data.frame(GenInd(hold2))
+      hold3$Nestedness<-nest_fun2(hold2)
       hold3$Trophic_levels<-Trophic_levels
       return(hold3)
     })
