@@ -16,7 +16,7 @@ rShift_sim<-function(){
     })}
   
   nest_fun<-function(net){
-    if(vcount(net)>0){
+    if(ecount(net)>0){
       return(NODF(import.RInSp(get.adjacency(net,sparse=F)))$NODF)
     } else {return(NA)}
   }
