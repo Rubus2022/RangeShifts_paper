@@ -47,8 +47,8 @@ rShift_sim<-function(){
     })
     
     #regional networks####
-    regWeb_pre<-metaweb(nets_pre)
-    regWeb_post<-metaweb(nets_post)
+    regWeb_pre<-metaweb(nets_pre[51:100])
+    regWeb_post<-metaweb(nets_post[51:100])
     
     #betalink
     betaLink_R<-rbind(data.frame(betalink2(regWeb_pre,regWeb_post,bf = B_jack_diss)),
@@ -59,6 +59,9 @@ rShift_sim<-function(){
     #net indicies
     netInd_R<-data.frame(GenInd2(get.adjacency(regWeb_post,sparse = F)))/
       data.frame(GenInd2(get.adjacency(regWeb_pre,sparse = F)))
+    
+    netInd_R$Nestedness<-NODF(import.RInSp(get.adjacency(regWeb_post,sparse = F),print.messages = F))$NODF/
+      NODF(import.RInSp(get.adjacency(regWeb_pre,sparse = F),print.messages = F))$NODF
     
     netInd_R$Trophic_levels<-length(unique(substring(V(regWeb_post)$name,1,1)))/length(unique(substring(V(regWeb_pre)$name,1,1)))
     
@@ -75,6 +78,10 @@ rShift_sim<-function(){
     #net indicies
     netInd_cR<-data.frame(GenInd2(get.adjacency(rcWeb_post,sparse = F)))/
       data.frame(GenInd2(get.adjacency(rcWeb_pre,sparse = F)))
+    
+    netInd_cR$Nestedness<-NODF(import.RInSp(get.adjacency(rcWeb_post,sparse = F),print.messages = F))$NODF/
+      NODF(import.RInSp(get.adjacency(rcWeb_pre,sparse = F),print.messages = F))$NODF
+    
     netInd_cR$Trophic_levels<-length(unique(substring(V(rcWeb_post)$name,1,1)))/length(unique(substring(V(rcWeb_pre)$name,1,1)))
     
     #Local networks
@@ -100,16 +107,23 @@ rShift_sim<-function(){
     netInd_Ln<-colMeans(unnest(data.frame(t(sapply(51:100,function(x){GenInd2(get.adjacency(nets_post[[x]],sparse = F))}))))/
                           unnest(data.frame(t(sapply(min_dist,function(x){GenInd2(get.adjacency(nets_pre[[x]],sparse = F))})))),na.rm=T)
     
+    netInd_Ln$Nestedness<-mean(unlist(sapply(51:100,function(x){NODF(import.RInSp(get.adjacency(nets_post[[x]],sparse = F),print.messages = F))$NODF})/
+                                            sapply(min_dist,function(x){NODF(import.RInSp(get.adjacency(nets_pre[[x]],sparse = F),print.messages = F))$NODF})))
+    
     netInd_Ln$Trophic_levels<-mean(unlist(sapply(51:100,function(x){length(unique(substring(V(nets_post[[x]])$name,1,1)))})/
                                             sapply(min_dist,function(x){length(unique(substring(V(nets_pre[[x]])$name,1,1)))})))
     netInd_Ln<-data.frame(netInd_Ln)
     
     #local patches####
-    netInd_Lp<-colMeans(unnest(data.frame(t(sapply(1:100,function(x){GenInd2(get.adjacency(nets_post[[x]],sparse = F))}))))/
-                          unnest(data.frame(t(sapply(1:100,function(x){GenInd2(get.adjacency(nets_pre[[x]],sparse = F))})))),na.rm=T)
+    netInd_Lp<-colMeans(unnest(data.frame(t(sapply(51:100,function(x){GenInd2(get.adjacency(nets_post[[x]],sparse = F))}))))/
+                          unnest(data.frame(t(sapply(51:100,function(x){GenInd2(get.adjacency(nets_pre[[x]],sparse = F))})))),na.rm=T)
     
-    netInd_Lp$Trophic_levels<-mean(unlist(sapply(1:100,function(x){length(unique(substring(V(nets_post[[x]])$name,1,1)))})/
-                                            sapply(1:100,function(x){length(unique(substring(V(nets_pre[[x]])$name,1,1)))})))
+    netInd_Lp$Nestedness<-mean(unlist(sapply(51:100,function(x){NODF(import.RInSp(get.adjacency(nets_post[[x]],sparse = F),print.messages = F))$NODF})/
+                                        sapply(51:100,function(x){NODF(import.RInSp(get.adjacency(nets_pre[[x]],sparse = F),print.messages = F))$NODF})))
+    
+    
+    netInd_Lp$Trophic_levels<-mean(unlist(sapply(51:100,function(x){length(unique(substring(V(nets_post[[x]])$name,1,1)))})/
+                                            sapply(51:100,function(x){length(unique(substring(V(nets_pre[[x]])$name,1,1)))})))
     netInd_Lp<-data.frame(netInd_Lp)
     
     
