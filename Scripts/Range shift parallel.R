@@ -6,14 +6,13 @@ library(dplyr)
 library(tidyr)
 library(betalink)
 library(igraph)
-library(viridis)
 library(NetIndices)
 library(RInSp)
 library(doParallel)
 library(foreach)
 
 #source("./Functions/process_nets.R")
-source("./Functions/rShift_sim.r")
+source("./rShift_sim.r")
 
 
 #set up parallel####
@@ -22,10 +21,10 @@ registerDoParallel(cl)
 getDoParWorkers()
 
 #simulation code####
-reps<-2
+reps<-getDoParWorkers()
 
 #run simulation function in parallel
-Sim_data_parallel<-foreach(r = 1:reps,.packages=c("igraph","dplyr","tidyr","vegan","betalink","NetIndices")) %dopar% rShift_sim()
+Sim_data_parallel<-foreach(r = 1:reps,.packages=c("igraph","dplyr","tidyr","RInSp","vegan","betalink","NetIndices")) %dopar% rShift_sim()
 for(r in 1:reps){
   Sim_data<-Sim_data_parallel[[r]]
   Net_shift.df_temp<-Sim_data[[1]]

@@ -15,6 +15,12 @@ rShift_sim<-function(){
       (b)/(a+b+c)
     })}
   
+  nest_fun<-function(net){
+    if(vcount(net)>0){
+      return(NODF(import.RInSp(get.adjacency(net,sparse=F)))$NODF)
+    } else {return(NA)}
+  }
+  
   process_nets<-function(Initial,Final,Ints,trophic=F, interactions=T){
     if(interactions==F){Ints<-matrix(1,80,80)} 
     diag(Ints)<-0
@@ -60,8 +66,7 @@ rShift_sim<-function(){
     netInd_R<-data.frame(GenInd2(get.adjacency(regWeb_post,sparse = F)))/
       data.frame(GenInd2(get.adjacency(regWeb_pre,sparse = F)))
     
-    netInd_R$Nestedness<-NODF(import.RInSp(get.adjacency(regWeb_post,sparse = F),print.messages = F))$NODF/
-      NODF(import.RInSp(get.adjacency(regWeb_pre,sparse = F),print.messages = F))$NODF
+    netInd_R$Nestedness<-nest_fun(regWeb_post)/nest_fun(regWeb_pre)
     
     netInd_R$Trophic_levels<-length(unique(substring(V(regWeb_post)$name,1,1)))/length(unique(substring(V(regWeb_pre)$name,1,1)))
     
@@ -79,8 +84,8 @@ rShift_sim<-function(){
     netInd_cR<-data.frame(GenInd2(get.adjacency(rcWeb_post,sparse = F)))/
       data.frame(GenInd2(get.adjacency(rcWeb_pre,sparse = F)))
     
-    netInd_cR$Nestedness<-NODF(import.RInSp(get.adjacency(rcWeb_post,sparse = F),print.messages = F))$NODF/
-      NODF(import.RInSp(get.adjacency(rcWeb_pre,sparse = F),print.messages = F))$NODF
+    netInd_cR$Nestedness<-nest_fun(rcWeb_post)/nest_fun(rcWeb_pre)
+
     
     netInd_cR$Trophic_levels<-length(unique(substring(V(rcWeb_post)$name,1,1)))/length(unique(substring(V(rcWeb_pre)$name,1,1)))
     
@@ -107,8 +112,8 @@ rShift_sim<-function(){
     netInd_Ln<-colMeans(unnest(data.frame(t(sapply(51:100,function(x){GenInd2(get.adjacency(nets_post[[x]],sparse = F))}))))/
                           unnest(data.frame(t(sapply(min_dist,function(x){GenInd2(get.adjacency(nets_pre[[x]],sparse = F))})))),na.rm=T)
     
-    netInd_Ln$Nestedness<-mean(unlist(sapply(51:100,function(x){NODF(import.RInSp(get.adjacency(nets_post[[x]],sparse = F),print.messages = F))$NODF})/
-                                            sapply(min_dist,function(x){NODF(import.RInSp(get.adjacency(nets_pre[[x]],sparse = F),print.messages = F))$NODF})))
+    netInd_Ln$Nestedness<-mean(unlist(sapply(51:100,function(x){nest_fun(nets_post[[x]])})/
+                                            sapply(min_dist,function(x){nest_fun(nets_pre[[x]])})))
     
     netInd_Ln$Trophic_levels<-mean(unlist(sapply(51:100,function(x){length(unique(substring(V(nets_post[[x]])$name,1,1)))})/
                                             sapply(min_dist,function(x){length(unique(substring(V(nets_pre[[x]])$name,1,1)))})))
@@ -118,8 +123,9 @@ rShift_sim<-function(){
     netInd_Lp<-colMeans(unnest(data.frame(t(sapply(51:100,function(x){GenInd2(get.adjacency(nets_post[[x]],sparse = F))}))))/
                           unnest(data.frame(t(sapply(51:100,function(x){GenInd2(get.adjacency(nets_pre[[x]],sparse = F))})))),na.rm=T)
     
-    netInd_Lp$Nestedness<-mean(unlist(sapply(51:100,function(x){NODF(import.RInSp(get.adjacency(nets_post[[x]],sparse = F),print.messages = F))$NODF})/
-                                        sapply(51:100,function(x){NODF(import.RInSp(get.adjacency(nets_pre[[x]],sparse = F),print.messages = F))$NODF})))
+    
+    netInd_Lp$Nestedness<-mean(unlist(sapply(51:100,function(x){nest_fun(nets_post[[x]])})/
+                                        sapply(51:100,function(x){nest_fun(nets_pre[[x]])})))
     
     
     netInd_Lp$Trophic_levels<-mean(unlist(sapply(51:100,function(x){length(unique(substring(V(nets_post[[x]])$name,1,1)))})/
