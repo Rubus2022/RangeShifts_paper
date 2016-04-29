@@ -21,7 +21,7 @@ rShift_sim<-function(){
     } else {return(0)}
   }
   
-  process_nets<-function(Initial,Final,Ints,trophic=F, interactions=T){
+  process_nets<-function(Initial,Final,Ints,trophic=F, interactions=T,cut_value=0.5){
     if(interactions==F){Ints<-matrix(1,80,80)} 
     diag(Ints)<-0
     if(trophic==T){
@@ -32,8 +32,8 @@ rShift_sim<-function(){
     nets_pre<-apply(Initial[,51:150],2,function(x){
       Int_strength<-abs(Ints*rep(x,each=n))
       Int_strength[x==0,]<-0
-      mean_Int_strength<-mean(Int_strength[Int_strength>0])
-      Int_strength[Int_strength<mean_Int_strength]<-0
+      Int_strength_cut<-quantile(Int_strength[Int_strength>0],cut_value)#mean(Int_strength[Int_strength>0])
+      Int_strength[Int_strength<Int_strength_cut]<-0
       Ints2<-1*Int_strength>0
       hold.df<-t(data.frame(Ints2[x>0,x>0]))
       net1<-graph.adjacency(hold.df)
@@ -44,8 +44,8 @@ rShift_sim<-function(){
     nets_post<-apply(Final[,51:150],2,function(x){
       Int_strength<-abs(Ints*rep(x,each=n))
       Int_strength[x==0,]<-0
-      mean_Int_strength<-mean(Int_strength[Int_strength>0])
-      Int_strength[Int_strength<mean_Int_strength]<-0
+      Int_strength_cut<-quantile(Int_strength[Int_strength>0],cut_value)#mean(Int_strength[Int_strength>0])
+      Int_strength[Int_strength<Int_strength_cut]<-0
       Ints2<-1*Int_strength>0
       hold.df<-t(data.frame(Ints2[x>0,x>0]))
       net1<-graph.adjacency(hold.df)
@@ -93,8 +93,8 @@ rShift_sim<-function(){
     nets_bin<-apply(cbind(Initial[,1:150],Final[,101:150]),2,function(x){
       Int_strength<-abs(Ints*rep(x,each=n))
       Int_strength[x==0,]<-0
-      mean_Int_strength<-mean(Int_strength[Int_strength>0])
-      Int_strength[Int_strength<mean_Int_strength]<-0
+      Int_strength_cut<-quantile(Int_strength[Int_strength>0],cut_value)#mean(Int_strength[Int_strength>0])
+      Int_strength[Int_strength<Int_strength_cut]<-0
       return(c(Int_strength))
     })
     link_dis<-(as.matrix(vegdist(t(nets_bin),method = "jaccard",binary = T))[51:150,151:200])
@@ -138,11 +138,13 @@ rShift_sim<-function(){
     betaLink$Scale<-factor(rep(c("Region","Climate region","Local network"),each=3),levels=c("Region","Climate region","Local network"),ordered = T)
     betaLink$Rep<-r
     betaLink$Dispersal<-disp
+    betaLink$Cut_nets<-cut_value
     
     netInd<-rbind(netInd_R,netInd_cR,netInd_Ln,netInd_Lp)
     netInd$Scale<-factor(c("Region","Climate region","Local network","Local patch"),levels=c("Region","Climate region","Local network","Local patch"),ordered = T)
     netInd$Rep<-r
     netInd$Dispersal<-disp
+    netInd$Cut_nets<-cut_value
     
     #Trophic levels
     if(trophic==T){
@@ -189,9 +191,12 @@ rShift_sim<-function(){
       Trophic_BL<-rbind(regBL,rcBL,LnBL)
       Trophic_BL$Rep<-r
       Trophic_BL$Dispersal<-disp
+      Trophic_BL$Cut_nets<-cut_value
+      
       Trophic_NI<-rbind(regNI,rcNI,LnNI)
       Trophic_NI$Rep<-r
       Trophic_NI$Dispersal<-disp
+      Trophic_NI$Cut_nets<-cut_value
       
       return(list(betaLink,netInd,Trophic_BL,Trophic_NI))
       
@@ -521,19 +526,33 @@ rShift_sim<-function(){
       }
     }
     
-    NoInt<-process_nets(Initial=Xhold,Final=X,Ints = BN,interactions = F)
-    Comp<-process_nets(Initial=XIhold,Final=XI,Ints = BI)
-    Mixed<-process_nets(Initial=XMhold,Final=XM,Ints = BM)
-    FW<-process_nets(Initial=X3hold,Final=X3,Ints = B3,trophic = T)
+    NoInt<-rbind(process_nets(Initial=Xhold,Final=X,Ints = BN,interactions = F,cut_value = 0.25),
+                 process_nets(Initial=Xhold,Final=X,Ints = BN,interactions = F,cut_value = 0.5),
+                 process_nets(Initial=Xhold,Final=X,Ints = BN,interactions = F,cut_value = 0.75))
+    Comp<-rbind(process_nets(Initial=XIhold,Final=XI,Ints = BI,cut_value = 0.25),
+                process_nets(Initial=XIhold,Final=XI,Ints = BI,cut_value = 0.5),
+                process_nets(Initial=XIhold,Final=XI,Ints = BI,cut_value = 0.75))
+    Mixed<-rbind(process_nets(Initial=XMhold,Final=XM,Ints = BM,cut_value = 0.25),
+                 process_nets(Initial=XMhold,Final=XM,Ints = BM,cut_value = 0.5),
+                 process_nets(Initial=XMhold,Final=XM,Ints = BM,cut_value = 0.75))
+    FW<-rbind(process_nets(Initial=X3hold,Final=X3,Ints = B3,trophic = T,cut_value = 0.25),
+              process_nets(Initial=X3hold,Final=X3,Ints = B3,trophic = T,cut_value = 0.5),
+              process_nets(Initial=X3hold,Final=X3,Ints = B3,trophic = T,cut_value = 0.75))
     
-    BL_temp<-rbind.data.frame(NoInt[[1]],Comp[[1]],Mixed[[1]],FW[[1]])
-    BL_temp$Community<-factor(rep(c("No interactions","Competitive","Mixed","Food web"), each=9),levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
-    NI_temp<-rbind.data.frame(NoInt[[2]],Comp[[2]],Mixed[[2]],FW[[2]])
-    NI_temp$Community<-factor(rep(c("No interactions","Competitive","Mixed","Food web"), each=4),levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
+    BL_temp<-rbind.data.frame(NoInt[,1][[1]],
+                              Comp[,1][[1]],
+                              Mixed[,1][[1]],
+                              FW[,1][[1]])
+    BL_temp$Community<-factor(rep(c("No interactions","Competitive","Mixed","Food web"), each=9*3),levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
+    NI_temp<-rbind.data.frame(NoInt[1,2][[1]],NoInt[2,2][[1]],NoInt[3,2][[1]],
+                              Comp[1,2][[1]],Comp[2,2][[1]],Comp[3,2][[1]],
+                              Mixed[1,2][[1]],Mixed[2,2][[1]],Mixed[3,2][[1]],
+                              FW[1,2][[1]],FW[2,2][[1]],FW[3,2][[1]])
+    NI_temp$Community<-factor(rep(c("No interactions","Competitive","Mixed","Food web"), each=4*3),levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
     
     
-    BL_FW_temp<-FW[[3]]
-    NI_FW_temp<-FW[[4]]
+    BL_FW_temp<-rbind.data.frame(FW[,3][[1]])
+    NI_FW_temp<-rbind.data.frame(FW[,4][[1]])
     
     Shift_temp<-Shift_sd_func()
     
