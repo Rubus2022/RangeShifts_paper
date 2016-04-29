@@ -539,10 +539,10 @@ rShift_sim<-function(){
               process_nets(Initial=X3hold,Final=X3,Ints = B3,trophic = T,cut_value = 0.5),
               process_nets(Initial=X3hold,Final=X3,Ints = B3,trophic = T,cut_value = 0.75))
     
-    BL_temp<-rbind.data.frame(NoInt[,1][[1]],
-                              Comp[,1][[1]],
-                              Mixed[,1][[1]],
-                              FW[,1][[1]])
+    BL_temp<-rbind.data.frame(NoInt[1,1][[1]],NoInt[2,1][[1]],NoInt[3,1][[1]],
+                              Comp[1,1][[1]],Comp[2,1][[1]],Comp[3,1][[1]],
+                              Mixed[1,1][[1]], Mixed[2,1][[1]], Mixed[3,1][[1]],
+                              FW[1,1][[1]],FW[2,1][[1]],FW[3,1][[1]])
     BL_temp$Community<-factor(rep(c("No interactions","Competitive","Mixed","Food web"), each=9*3),levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
     NI_temp<-rbind.data.frame(NoInt[1,2][[1]],NoInt[2,2][[1]],NoInt[3,2][[1]],
                               Comp[1,2][[1]],Comp[2,2][[1]],Comp[3,2][[1]],
