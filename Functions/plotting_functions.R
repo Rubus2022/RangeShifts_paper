@@ -132,21 +132,19 @@ nest_fun2<-function(net){
 
 Net_ind_func<-function(Com,Ints,trophic=F){
     trophicV<-factor(c(rep("plant",nprey),rep("herbivore",npred1),rep("predator",npred2)),levels=c("plant","herbivore","predator"),ordered = T)
-  Ind_hold2<-apply(Com[,seq(2000,7000,by=50),51:150],2,function(y){
+  Ind_hold2<-apply(Com[,51:150,],2,function(y){
     Ind_hold<-apply(y,2,function(x){
-      Ints<-BM
-      Int_strength<-abs(Ints*rep(x,each=length(x)))
-      hold<-Int_strength[x>0,x>0]
-      hold2<-hold
-      #keepV<-round(sum(hold>0)*0.3)
-      #hold2[order(hold,decreasing = F)[1:(length(hold)-keepV)]]<-0
-      hold2[hold<mean(hold)]<-0
-      if(trophic==T){Trophic_levels<-sum(tapply(x>0,trophicV,sum)>0)} else{
-        Trophic_levels<-1
+      Int_strength<-abs(Ints*rep(x,each=n))
+      Int_strength[x==0,]<-0
+      Int_strength_cut<-quantile(Int_strength[Int_strength>0],0.5)#mean(Int_strength[Int_strength>0])
+      Int_strength[Int_strength<Int_strength_cut]<-0
+      Ints2<-1*Int_strength>0
+      hold.df<-t(data.frame(Ints2[x>0,x>0]))
+      hold3<-data.frame(GenInd(hold.df))
+      hold3$Nestedness<-nest_fun2(hold.df)
+      if(trophic==T){hold3$Trophic_levels<-sum(tapply(x>0,trophicV,sum)>0)} else{
+        hold3$Trophic_levels<-1
       }
-      hold3<-data.frame(GenInd(hold2))
-      hold3$Nestedness<-nest_fun2(hold2)
-      hold3$Trophic_levels<-Trophic_levels
       return(hold3)
     })
     Ind_hold2<-do.call(rbind.data.frame,Ind_hold)
@@ -156,8 +154,8 @@ Net_ind_func<-function(Com,Ints,trophic=F){
 
   
   Net_inds<-do.call(rbind.data.frame,Ind_hold2)
-  Net_inds$time<-rep(seq(2000,7000,by=50),each=100)
-  Net_inds$patch<-51:150
+  Net_inds$time<-rep(seq(2000,7000,by=50))
+  Net_inds$patch<-rep(51:150,each=101)
   return(Net_inds)
 }
 
