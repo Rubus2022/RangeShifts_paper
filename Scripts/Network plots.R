@@ -12,7 +12,7 @@ library(NetIndices)
 source("./Functions/plotting_functions.R")
 
 
-dispV<-c(0.001,0.01,0.5)
+dispV<-c(0.001,0.01,0.1,0.5)
 reps<-1
 dd<-c(0.3,0.2,0.1)#kernel decay strength
 FoodWeb<-c("NoInt","Comp","Mixed","Plants","Herb","Pred") 
@@ -125,103 +125,85 @@ T_Opt3<-c(seq(1,maxEnv1,(maxEnv1-1)/(nprey-1)),seq(1,maxEnv1,(maxEnv1-1)/(npred1
 T_Norm<-apply(t(T_Opt3),2,dnorm,sd=50,x=seq(1,maxStress+maxEnv1))*300
 A3<-(T_Norm-max(T_Norm))
 
-
+Com_list<-list()
 for(d in 1:length(dispV)){
   disp<-dispV[d]
   print(d)
   
-  XI=array(NA,dim=c(n,length(StressV),nCom))
-  XI[,1,]=10
+  XI<-matrix(10,n,nCom)
   XM<-X3<-X<-XI
-  MeanInteract<-array(NA,dim=c(length(StressV)-1,n,4))
+  XIt<-XMt<-X3t<-Xt<-XI
+  
+  sampleV<-seq(2000,7000,by=50)
+  X_save<-array(NA,dim=c(n,nCom,length(sampleV)))
+  XI_save<-XM_save<-X3_save<-X_save
   
   for(l in 1:(length(StressV)-1)){
-    X[,l+1,]<-X[,l,]*exp(rep(C,nCom)+BN%*%X[,l,]+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(X[,l,]))*disp-disp*X[,l,]
-    X[,l+1,][(X[,l+1,]<10^-3)]<-0
+    Xt<-X*exp(rep(C,nCom)+BN%*%X+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(X))*disp-disp*X
+    Xt[Xt<10^-3]<-0
+    X<-Xt
     
-    XI[,l+1,]<-XI[,l,]*exp(rep(C,nCom)+BI%*%XI[,l,]+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(XI[,l,]))*disp-disp*XI[,l,]
-    XI[,l+1,][(XI[,l+1,]<10^-3)]<-0
+    XIt<-XI*exp(rep(C,nCom)+BI%*%XI+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(XI))*disp-disp*XI
+    XIt[XIt<10^-3]<-0
+    XI<-XIt
     
-    X3[preyV,l+1,]<-X3[preyV,l,]*exp(rep(C3[preyV],nCom)+B3[preyV,]%*%X3[,l,]+t(A3[(ComStart+Stress[StressV[l]]),preyV]))+t(Disp_pl%*%t(X3[preyV,l,]))*disp-disp*X3[preyV,l,]
-    X3[preyV,l+1,][(X3[preyV,l+1,]<10^-3)]<-0
-    X3[pred1V,l+1,]<-X3[pred1V,l,]*exp(rep(C3[pred1V],nCom)+B3[pred1V,]%*%X3[,l,]+t(A3[(ComStart+Stress[StressV[l]]),pred1V]))+t(Disp_h%*%t(X3[pred1V,l,]))*disp-disp*X3[pred1V,l,]
-    X3[pred1V,l+1,][(X3[pred1V,l+1,]<10^-3)]<-0
-    X3[pred2V,l+1,]<-X3[pred2V,l,]*exp(rep(C3[pred2V],nCom)+B3[pred2V,]%*%X3[,l,]+t(A3[(ComStart+Stress[StressV[l]]),pred2V]))+t(Disp_pr%*%t(X3[pred2V,l,]))*disp-disp*X3[pred2V,l,]
-    X3[pred2V,l+1,][(X3[pred2V,l+1,]<10^-3)]<-0
+    XMt<-XM*exp(rep(C,nCom)+BM%*%XM+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(XM))*disp-disp*XM
+    XMt[!is.finite(XMt)]<-0
+    XMt[(XMt<10^-3)]<-0
+    XM<-XMt
     
-    
-    XM[,l+1,]<-XM[,l,]*exp(rep(C,nCom)+BM%*%XM[,l,]+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(XM[,l,]))*disp-disp*XM[,l,]
-    XM[,l+1,][!is.finite(XM[,l+1,])]<-0
-    XM[,l+1,][(XM[,l+1,]<10^-3)]<-0
-    
-    MeanInteract[l,,1]<-rowMeans(BN1%*%X[,l,])
-    MeanInteract[l,,2]<-rowMeans(BI1%*%XI[,l,])
-    MeanInteract[l,,3]<-rowMeans(BM1%*%XM[,l,])
-    MeanInteract[l,,4]<-rowMeans(B31%*%X3[,l,])
+    X3t[preyV,]<-X3[preyV,]*exp(rep(C3[preyV],nCom)+B3[preyV,]%*%X3+t(A3[(ComStart+Stress[StressV[l]]),preyV]))+t(Disp_pl%*%t(X3[preyV,]))*disp-disp*X3[preyV,]
+    X3t[pred1V,]<-X3[pred1V,]*exp(rep(C3[pred1V],nCom)+B3[pred1V,]%*%X3+t(A3[(ComStart+Stress[StressV[l]]),pred1V]))+t(Disp_h%*%t(X3[pred1V,]))*disp-disp*X3[pred1V,]
+    X3t[pred2V,]<-X3[pred2V,]*exp(rep(C3[pred2V],nCom)+B3[pred2V,]%*%X3+t(A3[(ComStart+Stress[StressV[l]]),pred2V]))+t(Disp_pr%*%t(X3[pred2V,]))*disp-disp*X3[pred2V,]
+    X3t[(X3t<10^-3)]<-0
+    X3<-X3t
+    if(l==2000){
+      Xhold<-X
+      XIhold<-XI
+      XMhold<-XM
+      X3hold<-X3
+    }
+    if(sum(l==(sampleV-1))==1){
+      samp<-which(l==(sampleV-1))
+      X_save[,,samp]<-X
+      XI_save[,,samp]<-XI
+      XM_save[,,samp]<-XM
+      X3_save[,,samp]<-X3
+    }
   }
-  if(d==1){
-    XN1<-X
-    XI1<-XI
-    XM1<-XM
-    X1<-X3
-  } 
-  if(d==2){
-    XN2<-X
-    XI2<-XI
-    X2<-X3
-    XM2<-XM
-  }
-  #meta_net_plot(Com = X3,Ints = B3,trophic = T,prop_links = 0.5,interactions = T)
+  name<-paste("Comp",d)
+  Com_list[[name]]<-XI_save
+  name<-paste("Mixed",d)
+  Com_list[[name]]<-XM_save
+  name<-paste("FW",d)
+  Com_list[[name]]<-X3_save
 }
 
-Net_inds_3<-Net_ind_func(Com = XM1,Ints = BM)
-Net_inds_3$Dispersal<-0.001
-hold<-Net_ind_func(Com = XM2,Ints = BM)
-hold$Dispersal<-0.01
-Net_inds_3<-rbind(Net_inds_3,hold)
-hold<-Net_ind_func(Com = XM,Ints = BM)
-hold$Dispersal<-0.5
-Net_inds_3<-rbind(Net_inds_3,hold)
-Net_inds_3$Community<-"Mixed interactions"
+for(i in 1:length(dispV)){
+  name<-paste("Mixed", i)
+  Net_inds_1<-Net_ind_func(Com = Com_list[[name]],Ints = BM)
+  Net_inds_1$Community<-"Mixed interactions"
+  name<-paste("Comp", i)
+  Net_inds_2<-Net_ind_func(Com = Com_list[[name]],Ints = BI)
+  Net_inds_2$Community<-"Competition"
+  name<-paste("FW", i)
+  Net_inds_3<-Net_ind_func(Com = Com_list[[name]],Ints = B3)
+  Net_inds_3$Community<-"Food web"
+  hold<-rbind(Net_inds_1,Net_inds_2,Net_inds_3)
+  hold$Dispersal<-dispV[i]
+  if(i==1){
+    Net_inds<-hold
+  } else{ Net_inds<-rbind(Net_inds,hold)
+  }
+}
 
-hold<-Net_ind_func(Com = X1,Ints = B3,trophic = T)
-hold$Dispersal<-0.001
-hold$Community<-"Food web"
-Net_inds_3<-rbind(Net_inds_3,hold)
-hold<-Net_ind_func(Com = X2,Ints = B3,trophic = T)
-hold$Dispersal<-0.01
-hold$Community<-"Food web"
-Net_inds_3<-rbind(Net_inds_3,hold)
-hold<-Net_ind_func(Com = X3,Ints = B3,trophic = T)
-hold$Dispersal<-0.5
-hold$Community<-"Food web"
-Net_inds_3<-rbind(Net_inds_3,hold)
-
-hold<-Net_ind_func(Com = XI1,Ints = BI)
-hold$Dispersal<-0.001
-hold$Community<-"Competition"
-Net_inds_3<-rbind(Net_inds_3,hold)
-hold<-Net_ind_func(Com = XI2,Ints = BI)
-hold$Dispersal<-0.01
-hold$Community<-"Competition"
-Net_inds_3<-rbind(Net_inds_3,hold)
-hold<-Net_ind_func(Com = XI,Ints = BI)
-hold$Dispersal<-0.5
-hold$Community<-"Competition"
-Net_inds_3<-rbind(Net_inds_3,hold)
-Net_inds_3$Disp_text<-paste("Dispersal =", Net_inds_3$Dispersal)
-
-Net_inds_3$Community<-factor(Net_inds_3$Community,levels = c("Competition","Mixed interactions","Food web"),ordered = T)
+Net_inds$Community<-factor(Net_inds$Community,levels = c("Competition","Mixed interactions","Food web"),ordered = T)
 
 sampleV<-seq(2000,7000,by=50)
 
-Com_list<-list(Comp1=XI1[,sampleV,51:150],Comp2=XI2[,sampleV,51:150],Comp3=XI[,sampleV,51:150],
-               Mix1=XM1[,sampleV,51:150],Mix2=XM2[,sampleV,51:150],Mix3=XM[,sampleV,51:150],
-               FW1=X1[,sampleV,51:150],FW2=X2[,sampleV,51:150],FW3=X3[,sampleV,51:150])
-
 Int_list<-list(BI=BI,BM=BM,B3=B3)
 
-save(Net_inds_3,Com_list,Int_list,file="./Workspace/Range_shift_heatplots.RData")
+save(Net_inds,Com_list,Int_list,file="./Workspace/Range_shift_heatplots.RData")
 
 ggplot(filter(Net_inds_3,Community!="No interactions"),aes(y=patch,x=time,fill=N))+
   geom_raster()+
