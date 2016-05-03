@@ -78,39 +78,37 @@ npred1<-24
 npred2<-16
 n<-80
 
-patchI<-105
-patchM<-105
-patchT<-105
+Fpatch<-135
 adj_value<-0
 
 #Fig 1####
 pdf("./Figures/Figure 1.pdf",height=8,width = 10)
 par(mfrow=c(3,4),mar=c(1,1,1,1),oma=c(2,4,4,2))
-local_net_plot(Com_inits = Com_list$`Comp 1`[,,1],Com_final = Com_list$`Comp 1`[,patchI,101],Ints = Int_list$BI,trophic = F)
+local_net_plot(Com_inits = Com_list$`Comp 1`[,,1],Com_final = Com_list$`Comp 1`[,Fpatch,101],Ints = Int_list$BI,trophic = F)
 mtext(expression(bold("a")),side = 3,adj=adj_value)
-local_net_plot(Com_inits = Com_list$`Comp 2`[,,1],Com_final = Com_list$`Comp 2`[,patchI,101],Ints = Int_list$BI,trophic = F)
+local_net_plot(Com_inits = Com_list$`Comp 2`[,,1],Com_final = Com_list$`Comp 2`[,Fpatch,101],Ints = Int_list$BI,trophic = F)
 mtext(expression(bold("b")),side = 3,adj=adj_value)
-local_net_plot(Com_inits = Com_list$`Comp 3`[,,1],Com_final = Com_list$`Comp 3`[,patchI,101],Ints = Int_list$BI,trophic = F)
+local_net_plot(Com_inits = Com_list$`Comp 3`[,,1],Com_final = Com_list$`Comp 3`[,Fpatch,101],Ints = Int_list$BI,trophic = F)
 mtext(expression(bold("c")),side = 3,adj=adj_value)
-local_net_plot(Com_inits = Com_list$`Comp 4`[,,1],Com_final = Com_list$`Comp 4`[,patchI,101],Ints = Int_list$BI,trophic = F)
+local_net_plot(Com_inits = Com_list$`Comp 4`[,,1],Com_final = Com_list$`Comp 4`[,Fpatch,101],Ints = Int_list$BI,trophic = F)
 mtext(expression(bold("d")),side = 3,adj=adj_value)
 
-local_net_plot(Com_inits = Com_list$`Mixed 1`[,,1],Com_final = Com_list$`Mixed 1`[,patchI,101],Ints = Int_list$BM,trophic = F)
+local_net_plot(Com_inits = Com_list$`Mixed 1`[,,1],Com_final = Com_list$`Mixed 1`[,Fpatch,101],Ints = Int_list$BM,trophic = F)
 mtext(expression(bold("e")),side = 3,adj=adj_value)
-local_net_plot(Com_inits = Com_list$`Mixed 2`[,,1],Com_final = Com_list$`Mixed 2`[,patchI,101],Ints = Int_list$BM,trophic = F)
+local_net_plot(Com_inits = Com_list$`Mixed 2`[,,1],Com_final = Com_list$`Mixed 2`[,Fpatch,101],Ints = Int_list$BM,trophic = F)
 mtext(expression(bold("f")),side = 3,adj=adj_value)
-local_net_plot(Com_inits = Com_list$`Mixed 3`[,,1],Com_final = Com_list$`Mixed 3`[,patchI,101],Ints = Int_list$BM,trophic = F)
+local_net_plot(Com_inits = Com_list$`Mixed 3`[,,1],Com_final = Com_list$`Mixed 3`[,Fpatch,101],Ints = Int_list$BM,trophic = F)
 mtext(expression(bold("g")),side = 3,adj=adj_value)
-local_net_plot(Com_inits = Com_list$`Mixed 4`[,,1],Com_final = Com_list$`Mixed 4`[,patchI,101],Ints = Int_list$BM,trophic = F)
+local_net_plot(Com_inits = Com_list$`Mixed 4`[,,1],Com_final = Com_list$`Mixed 4`[,Fpatch,101],Ints = Int_list$BM,trophic = F)
 mtext(expression(bold("h")),side = 3,adj=adj_value)
 
-local_net_plot(Com_inits = Com_list$`FW 1`[,,1],Com_final = Com_list$`FW 1`[,patchI,101],Ints = Int_list$B3,trophic = T)
+local_net_plot(Com_inits = Com_list$`FW 1`[,,1],Com_final = Com_list$`FW 1`[,Fpatch,101],Ints = Int_list$B3,trophic = T)
 mtext(expression(bold("i")),side = 3,adj=adj_value)
-local_net_plot(Com_inits = Com_list$`FW 2`[,,1],Com_final = Com_list$`FW 2`[,patchI,101],Ints = Int_list$B3,trophic = T)
+local_net_plot(Com_inits = Com_list$`FW 2`[,,1],Com_final = Com_list$`FW 2`[,Fpatch,101],Ints = Int_list$B3,trophic = T)
 mtext(expression(bold("j")),side = 3,adj=adj_value)
-local_net_plot(Com_inits = Com_list$`FW 3`[,,1],Com_final = Com_list$`FW 3`[,patchI,101],Ints = Int_list$B3,trophic = T)
+local_net_plot(Com_inits = Com_list$`FW 3`[,,1],Com_final = Com_list$`FW 3`[,Fpatch,101],Ints = Int_list$B3,trophic = T)
 mtext(expression(bold("k")),side = 3,adj=adj_value)
-local_net_plot(Com_inits = Com_list$`FW 4`[,,1],Com_final = Com_list$`FW 4`[,patchI,101],Ints = Int_list$B3,trophic = T)
+local_net_plot(Com_inits = Com_list$`FW 4`[,,1],Com_final = Com_list$`FW 4`[,Fpatch,101],Ints = Int_list$B3,trophic = T)
 mtext(expression(bold("l")),side = 3,adj=adj_value)
 
 mtext("Dispersal = 0.001",side=3,outer = T,adj = 0.04,padj = -1)
@@ -139,7 +137,7 @@ Shift_means$Interactions<-factor(Shift_means$Interactions,levels = c("No interac
 Trophic_shift_means<-Net_shift_troph.df%>%
   group_by(Part,Scale,Dispersal,Trophic)%>%
   summarise_each(funs(mean(.,na.rm=T),lower=quantile(.,probs=c(0.25),na.rm=T),upper=quantile(.,probs=c(0.75),na.rm=T)))
-  
+
 Fig_2a<-ggplot(filter(Net_turn_means,Part=="All",Scale=="Local network"),aes(x=Dispersal,y=WN_mean,color=Community, fill=Community))+
   #facet_grid(Part~Scale,scales="free")+
   geom_line(size=1.2)+
@@ -233,13 +231,75 @@ ggsave("./Figures/Figure 3.pdf",width = 10,height = 6,scale = 1)
 
 #Figure 4####
 Net_inds$Disp_text<-paste("Dispersal = ", Net_inds$Dispersal, sep="")
-Net_inds_stand<-Net_inds%>%
-  ungroup()%>%
-  group_by(Community)%>%
-  mutate_each(funs(decostand(.,method="range",na.rm=T)),-Dispersal,-Disp_text,-patch,-time)
 
-ggplot(Net_inds_stand,aes(y=patch,x=time,fill=LD))+
+
+init_patch_fun<-function(Com_final,Com_inits,Ints){
+  nets_bin<-apply(cbind(Com_final,Com_inits),2,function(x){
+    Int_strength<-abs(Ints*rep(x,each=n))
+    Int_strength[x==0,]<-0
+    Int_strength_cut<-quantile(Int_strength[Int_strength>0],0.5)#mean(Int_strength[Int_strength>0])
+    Int_strength[Int_strength<Int_strength_cut]<-0
+    return(c(Int_strength))
+  })
+  link_dis<-(as.matrix(vegdist(t(nets_bin),method = "jaccard",binary = T))[,1])[-1]
+  min_dist<-which(link_dis==min(link_dis))
+  return(min_dist)
+}
+
+contrast_data<-rbind(filter(Net_inds,
+                            patch==max(init_patch_fun(Com_final = Com_list$`Comp 1`[,Fpatch,101],
+                                                      Com_inits = Com_list$`Comp 1`[,,1],Ints = Int_list$BI)),
+                            time==2000,Community=="Competition",Dispersal==0.001),
+                     filter(Net_inds,
+                            patch==max(init_patch_fun(Com_final = Com_list$`Comp 2`[,Fpatch,101],
+                                                      Com_inits = Com_list$`Comp 2`[,,1],Ints = Int_list$BI)),
+                            time==2000,Community=="Competition",Dispersal==0.01),
+                     filter(Net_inds,
+                            patch==max(init_patch_fun(Com_final = Com_list$`Comp 3`[,Fpatch,101],
+                                                      Com_inits = Com_list$`Comp 3`[,,1],Ints = Int_list$BI)),
+                            time==2000,Community=="Competition",Dispersal==0.1),
+                     filter(Net_inds,
+                            patch==max(init_patch_fun(Com_final = Com_list$`Comp 4`[,Fpatch,101],
+                                                      Com_inits = Com_list$`Comp 4`[,,1],Ints = Int_list$BI)),
+                            time==2000,Community=="Competition",Dispersal==0.5),
+                     filter(Net_inds,
+                            patch==max(init_patch_fun(Com_final = Com_list$`Mixed 1`[,Fpatch,101],
+                                                      Com_inits = Com_list$`Mixed 1`[,,1],Ints = Int_list$BM)),
+                            time==2000,Community=="Mixed interactions",Dispersal==0.001),
+                     filter(Net_inds,
+                            patch==max(init_patch_fun(Com_final = Com_list$`Mixed 2`[,Fpatch,101],
+                                                      Com_inits = Com_list$`Mixed 2`[,,1],Ints = Int_list$BM)),
+                            time==2000,Community=="Mixed interactions",Dispersal==0.01),
+                     filter(Net_inds,
+                            patch==max(init_patch_fun(Com_final = Com_list$`Mixed 3`[,Fpatch,101],
+                                                      Com_inits = Com_list$`Mixed 3`[,,1],Ints = Int_list$BM)),
+                            time==2000,Community=="Mixed interactions",Dispersal==0.1),
+                     filter(Net_inds,
+                            patch==max(init_patch_fun(Com_final = Com_list$`Mixed 4`[,Fpatch,101],
+                                                      Com_inits = Com_list$`Mixed 4`[,,1],Ints = Int_list$BM)),
+                            time==2000,Community=="Mixed interactions",Dispersal==0.5),
+                     filter(Net_inds,
+                            patch==max(init_patch_fun(Com_final = Com_list$`FW 1`[,Fpatch,101],
+                                                      Com_inits = Com_list$`FW 1`[,,1],Ints = Int_list$B3)),
+                            time==2000,Community=="Food web",Dispersal==0.001),
+                     filter(Net_inds,
+                            patch==max(init_patch_fun(Com_final = Com_list$`FW 2`[,Fpatch,101],
+                                                      Com_inits = Com_list$`FW 2`[,,1],Ints = Int_list$B3)),
+                            time==2000,Community=="Food web",Dispersal==0.01),
+                     filter(Net_inds,
+                            patch==max(init_patch_fun(Com_final = Com_list$`FW 3`[,Fpatch,101],
+                                                      Com_inits = Com_list$`FW 3`[,,1],Ints = Int_list$B3)),
+                            time==2000,Community=="Food web",Dispersal==0.1),
+                     filter(Net_inds,
+                            patch==max(init_patch_fun(Com_final = Com_list$`FW 4`[,Fpatch,101],
+                                                      Com_inits = Com_list$`FW 4`[,,1],Ints = Int_list$B3)),
+                            time==2000,Community=="Food web",Dispersal==0.5))
+
+
+ggplot(Net_inds,aes(y=patch,x=time,fill=LD))+
   geom_raster()+
+  geom_point(data = filter(Net_inds,patch==Fpatch,time==7000),aes(y=patch,x=time,fill=LD),size=5,pch=22, color="grey", stroke=2)+
+  geom_point(data=contrast_data,aes(y=patch,x=time,fill=LD),size=5,pch=22, color="grey", stroke=2)+
   facet_grid(Community~Disp_text)+
   theme_bw(base_size = 12)+
   removeGrid()+
@@ -247,7 +307,7 @@ ggplot(Net_inds_stand,aes(y=patch,x=time,fill=LD))+
   scale_fill_viridis(option = "D",name="")+
   ylab("Patch")+
   xlab("Time")
-ggsave(filename = "./Figures/Figure 4.png",width = 8,height = 8,dpi = 300)
+ggsave(filename = "./Figures/Figure 4.png",width = 12,height = 8,dpi = 300)
 
 #Figure S1####
 Fig_S1a<-ggplot(filter(Net_turn_means,Part=="Gain",Scale=="Local network"),aes(x=Dispersal,y=WN_mean,color=Community, fill=Community))+
