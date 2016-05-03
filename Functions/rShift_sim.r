@@ -1,4 +1,4 @@
-rShift_sim<-function(){
+rShift_sim<-function(cutV=c(0.75)){
   #functions####
   B_jack_diss<-function(pm){
     with(pm, {
@@ -85,7 +85,7 @@ rShift_sim<-function(){
       data.frame(GenInd2(get.adjacency(rcWeb_pre,sparse = F)))
     
     netInd_cR$Nestedness<-nest_fun(rcWeb_post)/nest_fun(rcWeb_pre)
-
+    
     
     netInd_cR$Trophic_levels<-length(unique(substring(V(rcWeb_post)$name,1,1)))/length(unique(substring(V(rcWeb_pre)$name,1,1)))
     
@@ -113,7 +113,7 @@ rShift_sim<-function(){
                           unnest(data.frame(t(sapply(min_dist,function(x){GenInd2(get.adjacency(nets_pre[[x]],sparse = F))})))),na.rm=T)
     
     netInd_Ln$Nestedness<-mean(unlist(sapply(51:100,function(x){nest_fun(nets_post[[x]])})/
-                                            sapply(min_dist,function(x){nest_fun(nets_pre[[x]])})),na.rm=T)
+                                        sapply(min_dist,function(x){nest_fun(nets_pre[[x]])})),na.rm=T)
     
     netInd_Ln$Trophic_levels<-mean(unlist(sapply(51:100,function(x){length(unique(substring(V(nets_post[[x]])$name,1,1)))})/
                                             sapply(min_dist,function(x){length(unique(substring(V(nets_pre[[x]])$name,1,1)))})))
@@ -491,12 +491,12 @@ rShift_sim<-function(){
     sampleV<-seq(2000,5000,by=10)
     X_save<-array(NA,dim=c(n,nCom,length(sampleV)))
     XI_save<-XM_save<-X3_save<-X_save
-
+    
     for(l in 1:(length(StressV)-1)){
       Xt<-X*exp(rep(C,nCom)+BN%*%X+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(X))*disp-disp*X
       Xt[Xt<10^-3]<-0
       X<-Xt
-
+      
       XIt<-XI*exp(rep(C,nCom)+BI%*%XI+t(A[(ComStart+Stress[StressV[l]]),]))+t(Disp_pl%*%t(XI))*disp-disp*XI
       XIt[XIt<10^-3]<-0
       XI<-XIt
@@ -505,7 +505,7 @@ rShift_sim<-function(){
       XMt[!is.finite(XMt)]<-0
       XMt[(XMt<10^-3)]<-0
       XM<-XMt
-
+      
       X3t[preyV,]<-X3[preyV,]*exp(rep(C3[preyV],nCom)+B3[preyV,]%*%X3+t(A3[(ComStart+Stress[StressV[l]]),preyV]))+t(Disp_pl%*%t(X3[preyV,]))*disp-disp*X3[preyV,]
       X3t[pred1V,]<-X3[pred1V,]*exp(rep(C3[pred1V],nCom)+B3[pred1V,]%*%X3+t(A3[(ComStart+Stress[StressV[l]]),pred1V]))+t(Disp_h%*%t(X3[pred1V,]))*disp-disp*X3[pred1V,]
       X3t[pred2V,]<-X3[pred2V,]*exp(rep(C3[pred2V],nCom)+B3[pred2V,]%*%X3+t(A3[(ComStart+Stress[StressV[l]]),pred2V]))+t(Disp_pr%*%t(X3[pred2V,]))*disp-disp*X3[pred2V,]
@@ -526,33 +526,34 @@ rShift_sim<-function(){
       }
     }
     
-    NoInt<-rbind(process_nets(Initial=Xhold,Final=X,Ints = BN,interactions = F,cut_value = 0.25),
-                 process_nets(Initial=Xhold,Final=X,Ints = BN,interactions = F,cut_value = 0.5),
-                 process_nets(Initial=Xhold,Final=X,Ints = BN,interactions = F,cut_value = 0.75))
-    Comp<-rbind(process_nets(Initial=XIhold,Final=XI,Ints = BI,cut_value = 0.25),
-                process_nets(Initial=XIhold,Final=XI,Ints = BI,cut_value = 0.5),
-                process_nets(Initial=XIhold,Final=XI,Ints = BI,cut_value = 0.75))
-    Mixed<-rbind(process_nets(Initial=XMhold,Final=XM,Ints = BM,cut_value = 0.25),
-                 process_nets(Initial=XMhold,Final=XM,Ints = BM,cut_value = 0.5),
-                 process_nets(Initial=XMhold,Final=XM,Ints = BM,cut_value = 0.75))
-    FW<-rbind(process_nets(Initial=X3hold,Final=X3,Ints = B3,trophic = T,cut_value = 0.25),
-              process_nets(Initial=X3hold,Final=X3,Ints = B3,trophic = T,cut_value = 0.5),
-              process_nets(Initial=X3hold,Final=X3,Ints = B3,trophic = T,cut_value = 0.75))
+    for(cut in 1:length(cutV)){
+      holdN<-process_nets(Initial=Xhold,Final=X,Ints = BN,interactions = F,cut_value = cutV[cut])
+      holdI<-process_nets(Initial=XIhold,Final=XI,Ints = BI,cut_value = cutV[cut])
+      holdM<-process_nets(Initial=XMhold,Final=XM,Ints = BM,cut_value = cutV[cut])
+      hold3<-process_nets(Initial=X3hold,Final=X3,Ints = B3,trophic = T,cut_value = cutV[cut])
+
+      BL_temp1<-rbind(holdN[[1]],holdI[[1]],holdM[[1]],hold3[[1]])
+      BL_temp1$Community<-factor(rep(c("No interactions","Competitive","Mixed","Food web"), each=9),levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
+      
+      NI_temp1<-rbind(holdN[[2]],holdI[[2]],holdM[[2]],hold3[[2]])
+      NI_temp1$Community<-factor(rep(c("No interactions","Competitive","Mixed","Food web"), each=4),levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
+       
+      BL_FW_temp1<-hold3[[3]]
+      NI_FW_temp1<-hold3[[4]]
+      
+      if(cut==1){
+        BL_temp<-BL_temp1
+        NI_temp<-NI_temp1
+        BL_FW_temp<-BL_FW_temp1
+        NI_FW_temp<-NI_FW_temp1
+      } else {
+        BL_temp<-rbind(BL_temp,BL_temp1)
+        NI_temp<-rbind(NI_temp,NI_temp1)
+        NI_FW_temp<-rbind(NI_FW_temp,NI_FW_temp1)
+        BL_FW_temp<-rbind(BL_FW_temp,BL_FW_temp1)
+      }
+    }
     
-    BL_temp<-rbind.data.frame(NoInt[1,1][[1]],NoInt[2,1][[1]],NoInt[3,1][[1]],
-                              Comp[1,1][[1]],Comp[2,1][[1]],Comp[3,1][[1]],
-                              Mixed[1,1][[1]], Mixed[2,1][[1]], Mixed[3,1][[1]],
-                              FW[1,1][[1]],FW[2,1][[1]],FW[3,1][[1]])
-    BL_temp$Community<-factor(rep(c("No interactions","Competitive","Mixed","Food web"), each=9*3),levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
-    NI_temp<-rbind.data.frame(NoInt[1,2][[1]],NoInt[2,2][[1]],NoInt[3,2][[1]],
-                              Comp[1,2][[1]],Comp[2,2][[1]],Comp[3,2][[1]],
-                              Mixed[1,2][[1]],Mixed[2,2][[1]],Mixed[3,2][[1]],
-                              FW[1,2][[1]],FW[2,2][[1]],FW[3,2][[1]])
-    NI_temp$Community<-factor(rep(c("No interactions","Competitive","Mixed","Food web"), each=4*3),levels = c("No interactions","Competitive","Mixed","Food web"),ordered = T)
-    
-    
-    BL_FW_temp<-rbind.data.frame(FW[,3][[1]])
-    NI_FW_temp<-rbind.data.frame(FW[,4][[1]])
     
     Shift_temp<-Shift_sd_func()
     
