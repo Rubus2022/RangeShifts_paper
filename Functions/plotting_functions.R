@@ -1,4 +1,4 @@
-meta_net_plot<-function(Com,Ints,trophic,interactions=T){
+meta_net_plot<-function(Com,Ints,trophic,interactions=T,cut_value=0.75){
   Meta_com_init<-Com[,burnL,51:100]
   Meta_com_fin<-Com[,l+1,101:150]  
   
@@ -11,8 +11,8 @@ meta_net_plot<-function(Com,Ints,trophic,interactions=T){
   nets_pre<-apply(Meta_com_init,2,function(x){
     Int_strength<-abs(Ints*rep(x,each=n))
     Int_strength[x==0,]<-0
-    mean_Int_strength<-mean(Int_strength[Int_strength>0])
-    Int_strength[Int_strength<mean_Int_strength]<-0
+    Int_strength_cut<-quantile(Int_strength[Int_strength>0],cut_value)#mean(Int_strength[Int_strength>0])
+    Int_strength[Int_strength<Int_strength_cut]<-0
     Ints2<-1*Int_strength>0
     hold.df<-t(data.frame(Ints2[x>0,x>0]))
     net1<-graph.adjacency(hold.df)
@@ -23,8 +23,8 @@ meta_net_plot<-function(Com,Ints,trophic,interactions=T){
   nets_post<-apply(Meta_com_fin,2,function(x){
     Int_strength<-abs(Ints*rep(x,each=n))
     Int_strength[x==0,]<-0
-    mean_Int_strength<-mean(Int_strength[Int_strength>0])
-    Int_strength[Int_strength<mean_Int_strength]<-0
+    Int_strength_cut<-quantile(Int_strength[Int_strength>0],cut_value)#mean(Int_strength[Int_strength>0])
+    Int_strength[Int_strength<Int_strength_cut]<-0
     Ints2<-1*Int_strength>0
     hold.df<-t(data.frame(Ints2[x>0,x>0]))
     net1<-graph.adjacency(hold.df)
@@ -51,7 +51,7 @@ meta_net_plot<-function(Com,Ints,trophic,interactions=T){
   network_betaplot(mWeb2,mWeb1,layout=as.matrix(lay.mat[,1:2]),na = "forestgreen",ns = "dodgerblue3",nb = "grey",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(0,1))
 }
 
-local_net_plot<-function(Com_inits,Com_final,Ints,trophic,prop_links=0.5,interactions=T){
+local_net_plot<-function(Com_inits,Com_final,Ints,trophic,cut_value=0.75,interactions=T){
   if(interactions==F){Ints<-matrix(1,n,n)}
   diag(Ints)<-0
   if(trophic==T){
@@ -61,8 +61,8 @@ local_net_plot<-function(Com_inits,Com_final,Ints,trophic,prop_links=0.5,interac
   nets<-apply(cbind(Com_final,Com_inits),2,function(x){
     Int_strength<-abs(Ints*rep(x,each=n))
     Int_strength[x==0,]<-0
-    mean_Int_strength<-mean(Int_strength[Int_strength>0])
-    Int_strength[Int_strength<mean_Int_strength]<-0
+    Int_strength_cut<-quantile(Int_strength[Int_strength>0],cut_value)#mean(Int_strength[Int_strength>0])
+    Int_strength[Int_strength<Int_strength_cut]<-0
     Ints2<-1*Int_strength>0
     hold.df<-t(data.frame(Ints2[x>0,x>0]))
     net1<-graph.adjacency(hold.df)
@@ -72,8 +72,8 @@ local_net_plot<-function(Com_inits,Com_final,Ints,trophic,prop_links=0.5,interac
   nets_bin<-apply(cbind(Com_final,Com_inits),2,function(x){
     Int_strength<-abs(Ints*rep(x,each=n))
     Int_strength[x==0,]<-0
-    mean_Int_strength<-mean(Int_strength[Int_strength>0])
-    Int_strength[Int_strength<mean_Int_strength]<-0
+    Int_strength_cut<-quantile(Int_strength[Int_strength>0],0.5)#mean(Int_strength[Int_strength>0])
+    Int_strength[Int_strength<Int_strength_cut]<-0
     return(c(Int_strength))
   })
   link_dis<-(as.matrix(vegdist(t(nets_bin),method = "jaccard",binary = T))[,1])[-1]
@@ -130,13 +130,13 @@ nest_fun2<-function(net){
     return(NODF(import.RInSp(net))$NODF)
 }
 
-Net_ind_func<-function(Com,Ints,trophic=F){
+Net_ind_func<-function(Com,Ints,trophic=F,cut_value=0.75){
     trophicV<-factor(c(rep("plant",nprey),rep("herbivore",npred1),rep("predator",npred2)),levels=c("plant","herbivore","predator"),ordered = T)
   Ind_hold2<-apply(Com[,51:150,],2,function(y){
     Ind_hold<-apply(y,2,function(x){
       Int_strength<-abs(Ints*rep(x,each=n))
       Int_strength[x==0,]<-0
-      Int_strength_cut<-quantile(Int_strength[Int_strength>0],0.5)#mean(Int_strength[Int_strength>0])
+      Int_strength_cut<-quantile(Int_strength[Int_strength>0],cut_value)#mean(Int_strength[Int_strength>0])
       Int_strength[Int_strength<Int_strength_cut]<-0
       Ints2<-1*Int_strength>0
       hold.df<-t(data.frame(Ints2[x>0,x>0]))
