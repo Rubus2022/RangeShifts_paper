@@ -14,13 +14,22 @@ source("./Functions/plotting_functions.R")
 
 options(scipen=999)
 
+ColV<-c("grey20",brewer.pal(4,"Set1")[c(2,3,4)])
+
 load("./Workspace/Range_shift.RData")
 Net_turn_means<-Net_shift.df%>%
   group_by(Part,Scale,Dispersal,Community)%>%
   summarise_each(funs(mean(.,na.rm=T),lower=quantile(.,probs=c(0.25),na.rm=T),upper=quantile(.,probs=c(0.75),na.rm=T)))
 
+Net_turn_means3<-Net_turn_means%>%
+  filter(Community=="Food web",Dispersal>=0.05)
+
+Net_turn_means_t<-Net_turn_means%>%
+  mutate(WN_mean=replace(WN_mean,Community=="Food web" & Dispersal>0.05,NA))
+
+
 #Fig 1 bar charts####
-pdf("./Figures/Fig. 1 barcharts.pdf", width = 10,height = 8)
+pdf("./Figures/Fig. 1 barcharts 2.pdf", width = 10,height = 8)
 par(mfrow=c(3,4),mar=c(1,1,1,1),oma=c(2,4,4,2))
 hold<-filter(Net_turn_means,Scale=="Local network", Community=="Competitive",Dispersal==0.001)$WN_mean
 hold[1]<-1-hold[1]
@@ -78,7 +87,7 @@ npred1<-24
 npred2<-16
 n<-80
 
-Fpatch<-135
+Fpatch<-120
 adj_value<-0
 
 #Fig 1####
@@ -121,43 +130,52 @@ mtext("Food web",side=2,outer = T,adj = 0.15,padj = -1)
 dev.off()
 
 #Figure 2####
-library(plyr)
+Shift.df$Interactions<-factor(Shift.df$Interactions,levels=c("Predators",levels(Shift.df$Interactions)))
+
 Shift_means<-Shift.df%>%
   group_by(Interactions,Dispersal)%>%
   summarise_each(funs(mean(.,na.rm=T),lower=quantile(.,probs=c(0.25),na.rm=T),upper=quantile(.,probs=c(0.75),na.rm=T)))%>%
   mutate(Trophic="Community")%>%
   ungroup()%>%
-  mutate(Interactions=revalue(Interactions,c("Carnivores"="Predators")))%>%
+  mutate(Interactions=replace(Interactions,Interactions=="Carnivores","Predators"))%>%
   mutate(Trophic=replace(Trophic,Interactions=="Plants","Food web"))%>%
   mutate(Trophic=replace(Trophic,Interactions=="Herbivores","Food web"))%>%
   mutate(Trophic=replace(Trophic,Interactions=="Predators","Food web"))
 
 Shift_means$Interactions<-factor(Shift_means$Interactions,levels = c("No interactions","Competition","Mixed","Food web","Plants","Herbivores","Predators"),ordered = T)
 
+Shift_means3<-Shift_means%>%
+  filter(Interactions=="Food web",Dispersal>=0.05)
+
+Shift_means1<-Shift_means%>%
+  mutate(Shift_sd_mean=replace(Shift_sd_mean,Interactions=="Food web" & Dispersal>0.05,NA))
+
 Trophic_shift_means<-Net_shift_troph.df%>%
   group_by(Part,Scale,Dispersal,Trophic)%>%
   summarise_each(funs(mean(.,na.rm=T),lower=quantile(.,probs=c(0.25),na.rm=T),upper=quantile(.,probs=c(0.75),na.rm=T)))
 
-Fig_2a<-ggplot(filter(Net_turn_means,Part=="All",Scale=="Local network"),aes(x=Dispersal,y=WN_mean,color=Community, fill=Community))+
+Fig_2a<-ggplot(filter(Net_turn_means_t,Part=="All",Scale=="Local network"),aes(x=Dispersal,y=WN_mean,color=Community, fill=Community))+
   #facet_grid(Part~Scale,scales="free")+
-  geom_line(size=1.2)+
   geom_ribbon(aes(ymin=WN_lower,ymax=WN_upper),alpha=0.2, color=NA)+
+  geom_line(size=1.2)+
+  geom_line(data=filter(Net_turn_means3,Part=="All",Scale=="Local network"),aes(x=Dispersal,y=WN_mean),size=1,linetype=3)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
-  scale_color_brewer(palette = "Set1",labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
-  scale_fill_brewer(palette = "Set1",labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
+  scale_color_manual(values = ColV,labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
+  scale_fill_manual(values = ColV,labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
   theme_bw(base_size = 12)+
   removeGrid()+
   ylab("Network dissimilarity")+
   xlab("Dispersal")+
   theme(legend.position=c(1,1),legend.justification=c(1,1))
 
-Fig_2b<-ggplot(filter(Shift_means,Trophic=="Community"),aes(x=Dispersal,y=Shift_sd_mean,color=Interactions,fill=Interactions))+
+Fig_2b<-ggplot(filter(Shift_means1,Trophic=="Community"),aes(x=Dispersal,y=Shift_sd_mean,color=Interactions,fill=Interactions))+
   #facet_grid(Part~Scale, scales="free")+
-  geom_line(size=1.2)+
   geom_ribbon(aes(ymin=Shift_sd_lower,ymax=Shift_sd_upper),alpha=0.2, color=NA)+
+  geom_line(size=1.2)+
+  geom_line(data=filter(Shift_means3,Trophic=="Community"),aes(x=Dispersal,y=Shift_sd_mean),size=1,linetype=3)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
-  scale_color_brewer(palette = "Set1",labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
-  scale_fill_brewer(palette = "Set1",labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
+  scale_color_manual(values = ColV,labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
+  scale_fill_manual(values = ColV,labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
   #facet_wrap(~Trophic)+
   theme_bw(base_size = 12)+
   removeGrid()+
@@ -196,30 +214,43 @@ plot_grid(Fig_2a,Fig_2b,Fig_2c,Fig_2d,labels=c("a","b","c","d"),ncol=2,nrow=2)
 ggsave("./Figures/Figure 2.pdf",width = 10,height = 8,scale = 1)
 
 #Figure 3####
+Net_ind.df<-Net_ind.df%>%
+  mutate(Trophic_levels=ifelse(Community!="Food web",NA,Trophic_levels))
+
 Net_ind_long<-gather(Net_ind.df,key = Measure, value = Proportion,N:Trophic_levels)
+
 Net_ind_long_means<-Net_ind_long%>%
   group_by(Dispersal,Community, Scale,Measure)%>%
   summarise_each(funs(mean(.,na.rm=T),lower=quantile(.,probs=c(0.25),na.rm=T),upper=quantile(.,probs=c(0.75),na.rm=T)))
 
 Net_ind_long_means<-filter(Net_ind_long_means,Scale=="Local network")
-Net_ind_long_means<-filter(Net_ind_long_means,Measure=="N" | Measure=="Ltot" | Measure=="LD"| Measure=="C"|Measure=="Cbar"| Measure=="Nestedness")
+Net_ind_long_means<-filter(Net_ind_long_means,Measure=="N" | Measure=="Ltot" | Measure=="LD"| Measure=="Trophic_levels"|Measure=="Cbar"| Measure=="Nestedness")
 
 Net_ind_long_means<-Net_ind_long_means%>%
   mutate(Measure=replace(Measure,Measure=="N","# of species"),
          Measure=replace(Measure,Measure=="Ltot","# of links"),
          Measure=replace(Measure,Measure=="LD","Link density"),
-         Measure=replace(Measure,Measure=="C","Connectance"),
+         Measure=replace(Measure,Measure=="Trophic_levels","Trophic levels"),
          Measure=replace(Measure,Measure=="Cbar","Compartmentalization"))
 
-Net_ind_long_means$Measure<-factor(Net_ind_long_means$Measure,levels=c("# of species","# of links","Link density","Connectance","Nestedness","Compartmentalization"),ordered = T)
+
+Net_ind_long_means$Measure<-factor(Net_ind_long_means$Measure,levels=c("# of species","# of links","Link density","Nestedness","Compartmentalization","Trophic levels"),ordered = T)
+
+
+Net_ind_long_means_3<-Net_ind_long_means%>%
+  filter(Community=="Food web",Dispersal>=0.05)
+
+Net_ind_long_means<-Net_ind_long_means%>%
+  mutate(Proportion_mean=replace(Proportion_mean,Community=="Food web" & Dispersal>0.05,NA))
 
 ggplot(Net_ind_long_means,aes(x=Dispersal,y=Proportion_mean,color=Community, fill=Community))+
   facet_wrap(~Measure,scales="free_y")+
-  geom_line(size=1.2)+
   geom_ribbon(aes(ymin=Proportion_lower,ymax=Proportion_upper),alpha=0.2, color=NA)+
+  geom_line(size=1.2)+
+  geom_line(data=Net_ind_long_means_3,aes(x=Dispersal,y=Proportion_mean),size=1,linetype=3)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
-  scale_color_brewer(palette = "Set1",name="")+
-  scale_fill_brewer(palette = "Set1",name="")+
+  scale_color_manual(values = ColV,name="")+
+  scale_fill_manual(values = ColV,name="")+
   theme_bw(base_size = 12)+
   removeGrid()+
   geom_hline(yintercept = 1, linetype=2)+
@@ -310,26 +341,29 @@ ggplot(Net_inds,aes(y=patch,x=time,fill=LD))+
 ggsave(filename = "./Figures/Figure 4.png",width = 12,height = 8,dpi = 300)
 
 #Figure S1####
-Fig_S1a<-ggplot(filter(Net_turn_means,Part=="Gain",Scale=="Local network"),aes(x=Dispersal,y=WN_mean,color=Community, fill=Community))+
+
+Fig_S1a<-ggplot(filter(Net_turn_means_t,Part=="Gain",Scale=="Local network"),aes(x=Dispersal,y=WN_mean,color=Community, fill=Community))+
   #facet_grid(Part~Scale,scales="free")+
+  geom_ribbon(aes(ymin=WN_lower,ymax=WN_upper),alpha=0.2, color=NA)+
   geom_line(size=1.2)+
-  geom_ribbon(aes(ymin=WN_mean-WN_sd,ymax=WN_mean+WN_sd),alpha=0.2, color=NA)+
+  geom_line(data=filter(Net_turn_means3,Part=="Gain",Scale=="Local network"),aes(x=Dispersal,y=WN_mean),size=1,linetype=3)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
-  scale_color_brewer(palette = "Set1",labels=c("None", "Competition", "Mixed","Food web"),name="")+
-  scale_fill_brewer(palette = "Set1",labels=c("None", "Competition", "Mixed","Food web"),name="")+
+  scale_color_manual(values = ColV,labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
+  scale_fill_manual(values = ColV,labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
   theme_bw(base_size = 12)+
   removeGrid()+
   ylab("Network dissimilarity (gains)")+
   xlab("Dispersal")+
   theme(legend.position="none")
 
-Fig_S1b<-ggplot(filter(Net_turn_means,Part=="Loss",Scale=="Local network"),aes(x=Dispersal,y=WN_mean,color=Community, fill=Community))+
+Fig_S1b<-ggplot(filter(Net_turn_means_t,Part=="Loss",Scale=="Local network"),aes(x=Dispersal,y=WN_mean,color=Community, fill=Community))+
   #facet_grid(Part~Scale,scales="free")+
+  geom_ribbon(aes(ymin=WN_lower,ymax=WN_upper),alpha=0.2, color=NA)+
   geom_line(size=1.2)+
-  geom_ribbon(aes(ymin=WN_mean-WN_sd,ymax=WN_mean+WN_sd),alpha=0.2, color=NA)+
+  geom_line(data=filter(Net_turn_means3,Part=="Loss",Scale=="Local network"),aes(x=Dispersal,y=WN_mean),size=1,linetype=3)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
-  scale_color_brewer(palette = "Set1",labels=c("None", "Competition", "Mixed","Food web"),name="")+
-  scale_fill_brewer(palette = "Set1",labels=c("None", "Competition", "Mixed","Food web"),name="")+
+  scale_color_manual(values = ColV,labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
+  scale_fill_manual(values = ColV,labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
   theme_bw(base_size = 12)+
   removeGrid()+
   ylab("Network dissimilarity (losses)")+
@@ -338,8 +372,8 @@ Fig_S1b<-ggplot(filter(Net_turn_means,Part=="Loss",Scale=="Local network"),aes(x
 
 Fig_S1c<-ggplot(filter(Trophic_shift_means,Part=="Gain",Scale=="Local network"),aes(x=Dispersal,y=WN_mean,color=Trophic,fill=Trophic))+
   #facet_grid(Part~Scale, scales="free")+
+  geom_ribbon(aes(ymin=WN_lower,ymax=WN_upper),alpha=0.2, color=NA)+
   geom_line(size=1.2)+
-  geom_ribbon(aes(ymin=WN_mean-WN_sd,ymax=WN_mean+WN_sd),alpha=0.2,color=NA)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
   scale_color_brewer(palette = "Set2")+
   scale_fill_brewer(palette = "Set2")+
@@ -350,9 +384,8 @@ Fig_S1c<-ggplot(filter(Trophic_shift_means,Part=="Gain",Scale=="Local network"),
   theme(legend.position="none")
 
 Fig_S1d<-ggplot(filter(Trophic_shift_means,Part=="Loss",Scale=="Local network"),aes(x=Dispersal,y=WN_mean,color=Trophic,fill=Trophic))+
-  #facet_grid(Part~Scale, scales="free")+
+  geom_ribbon(aes(ymin=WN_lower,ymax=WN_upper),alpha=0.2, color=NA)+
   geom_line(size=1.2)+
-  geom_ribbon(aes(ymin=WN_mean-WN_sd,ymax=WN_mean+WN_sd),alpha=0.2,color=NA)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
   scale_color_brewer(palette = "Set2",name="")+
   scale_fill_brewer(palette = "Set2",name="")+
