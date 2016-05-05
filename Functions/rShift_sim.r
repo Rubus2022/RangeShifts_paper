@@ -21,7 +21,7 @@ rShift_sim<-function(cutV=c(0.75)){
     } else {return(0)}
   }
   
-  process_nets<-function(Initial,Final,Ints,trophic=F, interactions=T,cut_value=0.5){
+  process_nets<-function(Initial,Final,Ints,trophic=F, interactions=T,cut_value=0.75){
     if(interactions==F){Ints<-matrix(1,80,80)} 
     diag(Ints)<-0
     if(trophic==T){
