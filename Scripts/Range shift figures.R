@@ -249,8 +249,8 @@ ggplot(Net_ind_long_means,aes(x=Dispersal,y=Proportion_mean,color=Community, fil
   geom_line(size=1.2)+
   geom_line(data=Net_ind_long_means_3,aes(x=Dispersal,y=Proportion_mean),size=1,linetype=3)+
   scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
-  scale_color_manual(values = ColV,name="")+
-  scale_fill_manual(values = ColV,name="")+
+  scale_color_manual(values = ColV,labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
+  scale_fill_manual(values = ColV,labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
   theme_bw(base_size = 12)+
   removeGrid()+
   geom_hline(yintercept = 1, linetype=2)+
@@ -334,14 +334,13 @@ ggplot(Net_inds,aes(y=patch,x=time,fill=LD))+
   facet_grid(Community~Disp_text)+
   theme_bw(base_size = 12)+
   removeGrid()+
-  scale_color_viridis(option = "D",name="")+
-  scale_fill_viridis(option = "D",name="")+
+  scale_color_viridis(option = "D",name="Link\ndensity")+
+  scale_fill_viridis(option = "D",name="Link\ndensity")+
   ylab("Patch")+
   xlab("Time")
 ggsave(filename = "./Figures/Figure 4.png",width = 12,height = 8,dpi = 300)
 
-#Figure S1####
-
+#Figure S3####
 Fig_S1a<-ggplot(filter(Net_turn_means_t,Part=="Gain",Scale=="Local network"),aes(x=Dispersal,y=WN_mean,color=Community, fill=Community))+
   #facet_grid(Part~Scale,scales="free")+
   geom_ribbon(aes(ymin=WN_lower,ymax=WN_upper),alpha=0.2, color=NA)+
@@ -399,6 +398,149 @@ Fig_S1d<-ggplot(filter(Trophic_shift_means,Part=="Loss",Scale=="Local network"),
 plot_grid(Fig_S1a,Fig_S1b,Fig_S1c,Fig_S1d,labels=c("a)","b)","c)","d)"),ncol=2,nrow=2)
 ggsave("./Figures/Figure S1.pdf",width = 10,height = 8,scale = 1)
 
+#Figures S4-S7####
+ggplot(Net_inds,aes(y=patch,x=time,fill=N))+
+  geom_raster()+
+  geom_point(data = filter(Net_inds,patch==Fpatch,time==7000),aes(y=patch,x=time,fill=N),size=5,pch=22, color="grey", stroke=2)+
+  geom_point(data=contrast_data,aes(y=patch,x=time,fill=N),size=5,pch=22, color="grey", stroke=2)+
+  facet_grid(Community~Disp_text)+
+  theme_bw(base_size = 12)+
+  removeGrid()+
+  scale_color_viridis(option = "D",name="# of species")+
+  scale_fill_viridis(option = "D",name="# of species")+
+  ylab("Patch")+
+  xlab("Time")
+ggsave(filename = "./Figures/Figure S4.png",width = 12,height = 8,dpi = 300)
+
+ggplot(Net_inds,aes(y=patch,x=time,fill=Ltot))+
+  geom_raster()+
+  geom_point(data = filter(Net_inds,patch==Fpatch,time==7000),aes(y=patch,x=time,fill=Ltot),size=5,pch=22, color="grey", stroke=2)+
+  geom_point(data=contrast_data,aes(y=patch,x=time,fill=Ltot),size=5,pch=22, color="grey", stroke=2)+
+  facet_grid(Community~Disp_text)+
+  theme_bw(base_size = 12)+
+  removeGrid()+
+  scale_color_viridis(option = "D",name="# of links")+
+  scale_fill_viridis(option = "D",name="# of links")+
+  ylab("Patch")+
+  xlab("Time")
+ggsave(filename = "./Figures/Figure S5.png",width = 12,height = 8,dpi = 300)
+
+ggplot(Net_inds,aes(y=patch,x=time,fill=Nestedness))+
+  geom_raster()+
+  geom_point(data = filter(Net_inds,patch==Fpatch,time==7000),aes(y=patch,x=time,fill=Nestedness),size=5,pch=22, color="grey", stroke=2)+
+  geom_point(data=contrast_data,aes(y=patch,x=time,fill=Nestedness),size=5,pch=22, color="grey", stroke=2)+
+  facet_grid(Community~Disp_text)+
+  theme_bw(base_size = 12)+
+  removeGrid()+
+  scale_color_viridis(option = "D",name="Nestedness")+
+  scale_fill_viridis(option = "D",name="Nestedness")+
+  ylab("Patch")+
+  xlab("Time")
+ggsave(filename = "./Figures/Figure S6.png",width = 12,height = 8,dpi = 300)
+
+ggplot(Net_inds,aes(y=patch,x=time,fill=Cbar))+
+  geom_raster()+
+  geom_point(data = filter(Net_inds,patch==Fpatch,time==7000),aes(y=patch,x=time,fill=Cbar),size=5,pch=22, color="grey", stroke=2)+
+  geom_point(data=contrast_data,aes(y=patch,x=time,fill=Cbar),size=5,pch=22, color="grey", stroke=2)+
+  facet_grid(Community~Disp_text)+
+  theme_bw(base_size = 12)+
+  removeGrid()+
+  scale_color_viridis(option = "D",name="Compartmentalization")+
+  scale_fill_viridis(option = "D",name="Compartmentalization")+
+  ylab("Patch")+
+  xlab("Time")
+ggsave(filename = "./Figures/Figure S7.png",width = 12,height = 8,dpi = 300)
 
 
+#Fig S8####
+Net_ind.df<-Net_ind.df%>%
+  mutate(Trophic_levels=ifelse(Community!="Food web",NA,Trophic_levels))
+
+Net_ind_long<-gather(Net_ind.df,key = Measure, value = Proportion,N:Trophic_levels)
+
+Net_ind_long_means<-Net_ind_long%>%
+  group_by(Dispersal,Community, Scale,Measure)%>%
+  summarise_each(funs(mean(.,na.rm=T),lower=quantile(.,probs=c(0.25),na.rm=T),upper=quantile(.,probs=c(0.75),na.rm=T)))
+
+Net_ind_long_means<-filter(Net_ind_long_means,Scale=="Local patch")
+Net_ind_long_means<-filter(Net_ind_long_means,Measure=="N" | Measure=="Ltot" | Measure=="LD"| Measure=="Trophic_levels"|Measure=="Cbar"| Measure=="Nestedness")
+
+Net_ind_long_means<-Net_ind_long_means%>%
+  mutate(Measure=replace(Measure,Measure=="N","# of species"),
+         Measure=replace(Measure,Measure=="Ltot","# of links"),
+         Measure=replace(Measure,Measure=="LD","Link density"),
+         Measure=replace(Measure,Measure=="Trophic_levels","Trophic levels"),
+         Measure=replace(Measure,Measure=="Cbar","Compartmentalization"))
+
+
+Net_ind_long_means$Measure<-factor(Net_ind_long_means$Measure,levels=c("# of species","# of links","Link density","Nestedness","Compartmentalization","Trophic levels"),ordered = T)
+
+
+Net_ind_long_means_3<-Net_ind_long_means%>%
+  filter(Community=="Food web",Dispersal>=0.05)
+
+Net_ind_long_means<-Net_ind_long_means%>%
+  mutate(Proportion_mean=replace(Proportion_mean,Community=="Food web" & Dispersal>0.05,NA))
+
+ggplot(Net_ind_long_means,aes(x=Dispersal,y=Proportion_mean,color=Community, fill=Community))+
+  facet_wrap(~Measure,scales="free_y")+
+  geom_ribbon(aes(ymin=Proportion_lower,ymax=Proportion_upper),alpha=0.2, color=NA)+
+  geom_line(size=1.2)+
+  geom_line(data=Net_ind_long_means_3,aes(x=Dispersal,y=Proportion_mean),size=1,linetype=3)+
+  scale_x_log10(breaks=c(0.0001,0.001,0.01,0.1,1),labels=c(0.0001,0.001,0.01,0.1,1))+
+  scale_color_manual(values = ColV,labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
+  scale_fill_manual(values = ColV,labels=c("No interactions", "Competition", "Mixed","Food web"),name="")+
+  theme_bw(base_size = 12)+
+  removeGrid()+
+  geom_hline(yintercept = 1, linetype=2)+
+  scale_y_continuous(breaks = c(0,0.5,1,1.5,2,2.5))+
+  ylab("Propotion of initial network")+
+  xlab("Dispersal")+
+  theme(legend.position=c(1,1),legend.justification=c(1,1.6))
+ggsave("./Figures/Figure S8.pdf",width = 10,height = 6,scale = 1)
+
+#Fig S9####
+par(mfrow=c(3,4),mar=c(1,1,1,1),oma=c(2,4,4,2))
+Com_list$`Comp 1`[,,1]*Int_list$BI
+
+int_hist.df<-rbind(int_hist_f(Com=Com_list$`Comp 1`,Ints = Int_list$BI,Fpatch = Fpatch,trophic = F,dispersal = 0.001,community = "Competition"),
+      int_hist_f(Com=Com_list$`Comp 2`,Ints = Int_list$BI,Fpatch = Fpatch,trophic = F,dispersal = 0.01,community = "Competition"),
+      int_hist_f(Com=Com_list$`Comp 3`,Ints = Int_list$BI,Fpatch = Fpatch,trophic = F,dispersal = 0.1,community = "Competition"),
+      int_hist_f(Com=Com_list$`Comp 4`,Ints = Int_list$BI,Fpatch = Fpatch,trophic = F,dispersal = 0.5,community = "Competition"),
+      int_hist_f(Com=Com_list$`Mixed 1`,Ints = Int_list$BM,Fpatch = Fpatch,trophic = F,dispersal = 0.001,community = "Mixed"),
+      int_hist_f(Com=Com_list$`Mixed 2`,Ints = Int_list$BM,Fpatch = Fpatch,trophic = F,dispersal = 0.01,community = "Mixed"),
+      int_hist_f(Com=Com_list$`Mixed 3`,Ints = Int_list$BM,Fpatch = Fpatch,trophic = F,dispersal = 0.1,community = "Mixed"),
+      int_hist_f(Com=Com_list$`Mixed 4`,Ints = Int_list$BM,Fpatch = Fpatch,trophic = F,dispersal = 0.5,community = "Mixed"),
+      int_hist_f(Com=Com_list$`FW 1`,Ints = Int_list$B3,Fpatch = Fpatch,trophic = T,dispersal = 0.001,community = "Food web"),
+      int_hist_f(Com=Com_list$`FW 2`,Ints = Int_list$B3,Fpatch = Fpatch,trophic = T,dispersal = 0.01,community = "Food web"),
+      int_hist_f(Com=Com_list$`FW 3`,Ints = Int_list$B3,Fpatch = Fpatch,trophic = T,dispersal = 0.1,community = "Food web"),
+      int_hist_f(Com=Com_list$`FW 4`,Ints = Int_list$B3,Fpatch = Fpatch,trophic = T,dispersal = 0.5,community = "Food web"))
+
+int_hist.df$Time<-factor(int_hist.df$Time,levels=c("Pre-change","Post-change"),ordered = T)
+
+int_quants<-int_hist.df%>%
+  group_by(Time,Dispersal,Community)%>%
+  summarise(Quantile25=quantile(Real_ints,probs = c(0.25)),
+            Quantile50=quantile(Real_ints,probs = c(0.5)),
+            Quantile75=quantile(Real_ints,probs = c(0.75)))
+int_quants<-gather(int_quants,key = Quantile,value = Value,Quantile25:Quantile75)
+      
+
+ggplot(int_hist.df,aes(x=Real_ints,color=Time))+
+  geom_histogram(position="identity",fill=NA, bins=20)+
+  theme(panel.margin=unit(3,"mm"))+
+  facet_grid(Community~Dispersal, scales="free_y")+
+  xlab("Realized interaction strength")+
+  geom_vline(data=filter(int_quants,Quantile=="Quantile75"),aes(xintercept = Value, color=Time), linetype=2)
+ggsave("./Figures/Figure S9.pdf",width = 12,height = 8)
+
+int_scatter<-spread(data=int_hist.df,key = Time,value =  Real_ints)
+int_scatter[is.na(int_scatter)]<-0
+names(int_scatter)[4:5]<-c("pre","post")
+
+ggplot(int_scatter,aes(x=pre,y=post))+
+  geom_point()+
+  facet_grid(Community~Dispersal)+
+  geom_abline(intercept=0,slope=1)
+ggsave("./Figures/Int scatter.pdf",width = 12,height = 8)
 

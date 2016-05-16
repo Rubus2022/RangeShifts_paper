@@ -203,3 +203,33 @@ B_jack_diss_loss<-function(pm){
   with(pm, {
     (b)/(a+b+c)
   })}
+
+int_hist_f<-function(Com,Ints,Fpatch,trophic=F,dispersal, community){
+  diag(Ints)<-0
+  if(trophic==T){
+    colnames(Ints)<-rownames(Ints)<-c(paste("p",1:nprey),paste('h',1:npred1),paste("c",1:npred2))} else {
+      colnames(Ints)<-rownames(Ints)<-paste("s",1:n)}
+  
+  nets_bin<-apply(cbind(Com[,Fpatch,101],Com[,,1]),2,function(x){
+    Int_strength<-abs(Ints*rep(x,each=n))
+    Int_strength[x==0,]<-0
+    Int_strength_cut<-quantile(Int_strength[Int_strength>0],0.5)#mean(Int_strength[Int_strength>0])
+    Int_strength[Int_strength<Int_strength_cut]<-0
+    return(c(Int_strength))
+  })
+  link_dis<-(as.matrix(vegdist(t(nets_bin),method = "jaccard",binary = T))[,1])[-1]
+  min_dist<-which(link_dis==min(link_dis))
+  
+  Fints<-abs(Ints*rep(Com[,Fpatch,101],each=n))
+  F_label<-1:length(Fints)
+  F_label<-F_label[Fints>0]
+  Fints<-Fints[Fints>0]
+  
+  Iints<-abs(Ints*rep(Com[,min_dist[1],1],each=n))
+  I_label<-1:length(Iints)
+  I_label<-I_label[Iints>0]
+  Iints<-Iints[Iints>0]
+  
+Int.df<-data.frame(Real_ints=c(Iints,Fints),Label=c(I_label,F_label),Time=c(rep("Pre-change",length(Iints)),rep("Post-change",length((Fints)))),Dispersal = paste("Dispersal =",dispersal),Community = community)
+return(Int.df)           
+}
