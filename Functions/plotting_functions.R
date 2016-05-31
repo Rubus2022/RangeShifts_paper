@@ -30,7 +30,7 @@ meta_net_plot<-function(Com,Ints,trophic,interactions=T,cut_value=0.75){
     net1<-graph.adjacency(hold.df)
     return(net1) 
   })
-
+  
   
   mWeb1<-metaweb(nets_pre)
   mWeb2<-metaweb(nets_post)
@@ -99,17 +99,25 @@ local_net_plot<-function(Com_inits,Com_final,Ints,trophic,cut_value=0.75,interac
   vcount(fullweb)
   
   if(trophic==T){
-  lay.mat<-data.frame(x=runif(vcount(fullweb)),y=as.numeric(factor(substring(V(fullweb)$name,1,1),levels = c("p","h","c"),ordered = T)),shape=as.numeric(factor(substring(V(fullweb)$name,1,1),levels = c("p","h","c"),ordered = T)),num=as.numeric(substring(V(fullweb)$name,3,4)), order=1:vcount(fullweb))
-  lay.mat<-lay.mat%>%
-    arrange(num)%>%
-    group_by(y)%>%
-    mutate(x=seq(0,1,length=n()))%>%
-    ungroup()%>%
-    mutate(y=replace(y,y==2,2.25), y=replace(y,y==1,jitter(y[y==1],amount = 0.3)))
-  
-  lay.mat<-lay.mat[order(lay.mat$order),]
-  par(pty='s')
-  network_betaplot(web1,web2,layout=as.matrix(lay.mat[,1:2]),ns = "dodgerblue3",na = "#ff7f00",nb = "grey",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(-0.1,1.1))
+    w1e<-substring(get.edgelist(web1),1,1)
+    w1e_remove<-w1e[,1]=="h" & w1e[,2]=="p" | w1e[,1]=="c" & w1e[,2]=="h"
+    web1h<-delete_edges(web1,E(web1)[w1e_remove])
+    
+    w2e<-substring(get.edgelist(web2),1,1)
+    w2e_remove<-w2e[,1]=="h" & w2e[,2]=="p" | w2e[,1]=="c" & w2e[,2]=="h"
+    web2h<-delete_edges(web2,E(web2)[w2e_remove])
+    
+    lay.mat<-data.frame(x=runif(vcount(fullweb)),y=as.numeric(factor(substring(V(fullweb)$name,1,1),levels = c("p","h","c"),ordered = T)),shape=as.numeric(factor(substring(V(fullweb)$name,1,1),levels = c("p","h","c"),ordered = T)),num=as.numeric(substring(V(fullweb)$name,3,4)), order=1:vcount(fullweb))
+    lay.mat<-lay.mat%>%
+      arrange(num)%>%
+      group_by(y)%>%
+      mutate(x=seq(0,1,length=n()))%>%
+      ungroup()%>%
+      mutate(y=replace(y,y==2,2.25), y=replace(y,y==1,jitter(y[y==1],amount = 0.3)))
+    
+    lay.mat<-lay.mat[order(lay.mat$order),]
+    par(pty='s')
+    network_betaplot(web1h,web2h,layout=as.matrix(lay.mat[,1:2]),ns = "dodgerblue3",na = "#ff7f00",nb = "grey",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, ylim=c(0.5,3),xlim=c(-0.1,1.1))
   } else {
     lay.mat<-as.data.frame(layout_in_circle(fullweb))
     set.seed(2)
@@ -124,14 +132,14 @@ local_net_plot<-function(Com_inits,Com_final,Ints,trophic,cut_value=0.75,interac
     par(pty='s')
     network_betaplot(web1,web2,layout=as.matrix(lay.mat_sub[,1:2]),ns = "dodgerblue3",na = "#ff7f00",nb = "grey",vertex.label=NA,vertex.size=8,vertex.shape="circle",edge.arrow.size=0.5,rescale=F,asp=F, xlim=c(-1,1), ylim=c(-1,1))
   }
-  }
+}
 
 nest_fun2<-function(net){
-    return(NODF(import.RInSp(net))$NODF)
+  return(NODF(import.RInSp(net))$NODF)
 }
 
 Net_ind_func<-function(Com,Ints,trophic=F,cut_value=0.75){
-    trophicV<-factor(c(rep("plant",nprey),rep("herbivore",npred1),rep("predator",npred2)),levels=c("plant","herbivore","predator"),ordered = T)
+  trophicV<-factor(c(rep("plant",nprey),rep("herbivore",npred1),rep("predator",npred2)),levels=c("plant","herbivore","predator"),ordered = T)
   Ind_hold2<-apply(Com[,51:150,],2,function(y){
     Ind_hold<-apply(y,2,function(x){
       Int_strength<-abs(Ints*rep(x,each=n))
@@ -151,7 +159,7 @@ Net_ind_func<-function(Com,Ints,trophic=F,cut_value=0.75){
     return(Ind_hold2)
   })
   
-
+  
   
   Net_inds<-do.call(rbind.data.frame,Ind_hold2)
   Net_inds$time<-rep(seq(2000,7000,by=50))
@@ -230,6 +238,6 @@ int_hist_f<-function(Com,Ints,Fpatch,trophic=F,dispersal, community){
   I_label<-I_label[Iints>0]
   Iints<-Iints[Iints>0]
   
-Int.df<-data.frame(Real_ints=c(Iints,Fints),Label=c(I_label,F_label),Time=c(rep("Pre-change",length(Iints)),rep("Post-change",length((Fints)))),Dispersal = paste("Dispersal =",dispersal),Community = community)
-return(Int.df)           
+  Int.df<-data.frame(Real_ints=c(Iints,Fints),Label=c(I_label,F_label),Time=c(rep("Pre-change",length(Iints)),rep("Post-change",length((Fints)))),Dispersal = paste("Dispersal =",dispersal),Community = community)
+  return(Int.df)           
 }

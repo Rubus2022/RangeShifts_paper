@@ -500,8 +500,6 @@ ggplot(Net_ind_long_means,aes(x=Dispersal,y=Proportion_mean,color=Community, fil
 ggsave("./Figures/Figure S8.pdf",width = 10,height = 6,scale = 1)
 
 #Fig S9####
-par(mfrow=c(3,4),mar=c(1,1,1,1),oma=c(2,4,4,2))
-Com_list$`Comp 1`[,,1]*Int_list$BI
 
 int_hist.df<-rbind(int_hist_f(Com=Com_list$`Comp 1`,Ints = Int_list$BI,Fpatch = Fpatch,trophic = F,dispersal = 0.001,community = "Competition"),
       int_hist_f(Com=Com_list$`Comp 2`,Ints = Int_list$BI,Fpatch = Fpatch,trophic = F,dispersal = 0.01,community = "Competition"),
@@ -526,10 +524,12 @@ int_quants<-int_hist.df%>%
 int_quants<-gather(int_quants,key = Quantile,value = Value,Quantile25:Quantile75)
       
 
-ggplot(int_hist.df,aes(x=Real_ints,color=Time))+
-  geom_histogram(position="identity",fill=NA, bins=20)+
+ggplot(int_hist.df,aes(x=Real_ints,color=Time, fill=Time))+
+  geom_histogram(position="identity", bins=20)+
   theme(panel.margin=unit(3,"mm"))+
   facet_grid(Community~Dispersal, scales="free_y")+
+  scale_fill_manual(values = c("grey",NA))+
+  scale_color_brewer(palette = "Set1")+
   xlab("Realized interaction strength")+
   geom_vline(data=filter(int_quants,Quantile=="Quantile75"),aes(xintercept = Value, color=Time), linetype=2)
 ggsave("./Figures/Figure S9.pdf",width = 12,height = 8)
