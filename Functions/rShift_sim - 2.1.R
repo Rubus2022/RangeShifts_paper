@@ -314,8 +314,8 @@ rShift_sim<-function(r=1){
       beta_troph$BC<-NA
     }
     
-    beta_troph$Part<-c("All","Gain","Loss")
-    beta_troph$Trophic<-factor(rep(c("Plant competition","Herbivory","Predation"),each=3),levels = c("Plant competition","Herbivory","Predation"),ordered = T)
+    beta_troph$Part<-rep(c("All","Gain","Loss"),each=3)
+    beta_troph$Trophic<-factor(c("Plant competition","Herbivory","Predation"),levels = c("Plant competition","Herbivory","Predation"),ordered = T)
     
     netInds_trophic<-rbind(data.frame(GenInd2(get.adjacency(plant_post,sparse = F)))/data.frame(GenInd2(get.adjacency(plant_pre,sparse = F))),
                            data.frame(GenInd2(get.adjacency(herb_post,sparse = F)))/data.frame(GenInd2(get.adjacency(herb_pre,sparse = F))),
