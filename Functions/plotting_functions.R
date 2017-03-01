@@ -148,6 +148,8 @@ Net_ind_func<-function(Com,Ints,trophic=F,cut_value=0.75){
       #Int_strength[Int_strength<Int_strength_cut]<-0
       #Ints2<-1*Int_strength>0
       hold.df<-t(data.frame(Int_strength[x>0,x>0]))
+      colnames(hold.df)<-rownames(hold.df)
+      diag(hold.df)<-0
       hold3<-data.frame(GenInd(hold.df))
       #hold3$Nestedness<-nest_fun2(hold.df)
       if(trophic==T){hold3$Trophic_levels<-sum(tapply(x>0,trophicV,sum)>0)} else{
