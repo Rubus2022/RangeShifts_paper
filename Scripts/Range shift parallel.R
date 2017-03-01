@@ -1,30 +1,24 @@
 library(vegan)
-library(ggplot2)
-library(ggExtra)
-library(RColorBrewer)
 library(dplyr)
 library(tidyr)
 library(betalink)
 library(igraph)
 library(NetIndices)
 library(RInSp)
-library(doParallel)
-library(foreach)
+#library(doParallel)
+#library(foreach)
+library(parallel)
 
 #source("./Functions/process_nets.R")
-source("./rShift_sim.r")
+source("./Functions/rShift_sim - 2.1.R")
 
-
-#set up parallel####
-cl<-makeCluster(detectCores())
-registerDoParallel(cl)
-getDoParWorkers()
-
-#simulation code####
-reps<-getDoParWorkers()
 
 #run simulation function in parallel
-Sim_data_parallel<-foreach(r = 1:reps,.packages=c("igraph","dplyr","tidyr","RInSp","vegan","betalink","NetIndices")) %dopar% rShift_sim()
+reps<-2
+Sim_data_parallel<-mclapply(X = 1:reps, FUN= rShift_sim, mc.cores = 2)
+
+# Sim_data_parallel<-foreach(r = 1:reps,.packages=c("igraph","dplyr","tidyr","RInSp","vegan","betalink","NetIndices")) %dopar% rShift_sim()
+# stopCluster()
 for(r in 1:reps){
   Sim_data<-Sim_data_parallel[[r]]
   Net_shift.df_temp<-Sim_data[[1]]
