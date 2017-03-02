@@ -222,17 +222,18 @@ Net_ind_long_means<-Net_ind_long%>%
   summarise_each(funs(mean(.,na.rm=T),lower=quantile(.,probs=c(0.25),na.rm=T),upper=quantile(.,probs=c(0.75),na.rm=T)))
 
 Net_ind_long_means<-filter(Net_ind_long_means,Scale=="Local network")
-Net_ind_long_means<-filter(Net_ind_long_means,Measure=="N" | Measure=="Ltot" | Measure=="LD"| Measure=="Trophic_levels"|Measure=="Cbar"| Measure=="Nestedness")
+Net_ind_long_means<-filter(Net_ind_long_means,Measure=="N" | Measure=="Ltot" | Measure=="LD"| Measure=="Trophic_levels"|Measure=="Cbar"| Measure=="TSTbar")
 
 Net_ind_long_means<-Net_ind_long_means%>%
   mutate(Measure=replace(Measure,Measure=="N","# of species"),
          Measure=replace(Measure,Measure=="Ltot","# of links"),
          Measure=replace(Measure,Measure=="LD","Link density"),
          Measure=replace(Measure,Measure=="Trophic_levels","Trophic levels"),
-         Measure=replace(Measure,Measure=="Cbar","Compartmentalization"))
+         Measure=replace(Measure,Measure=="Cbar","Compartmentalization"),
+         Measure=replace(Measure,Measure=="TSTbar","Average compartment throughflow"))
 
 
-Net_ind_long_means$Measure<-factor(Net_ind_long_means$Measure,levels=c("# of species","# of links","Link density","Nestedness","Compartmentalization","Trophic levels"),ordered = T)
+Net_ind_long_means$Measure<-factor(Net_ind_long_means$Measure,levels=c("# of species","# of links","Link density","Compartmentalization","Average compartment throughflow","Trophic levels"),ordered = T)
 
 
 Net_ind_long_means_3<-Net_ind_long_means%>%
@@ -437,6 +438,19 @@ ggplot(Net_inds,aes(y=patch,x=time,fill=Cbar))+
   xlab("Time")
 ggsave(filename = "./Figures/Figure S6.png",width = 12,height = 8,dpi = 300)
 
+ggplot(Net_inds,aes(y=patch,x=time,fill=TSTbar))+
+  geom_raster()+
+  geom_point(data = filter(Net_inds,patch==Fpatch,time==7000),aes(y=patch,x=time,fill=TSTbar),size=5,pch=22, color="grey", stroke=2)+
+  geom_point(data=contrast_data,aes(y=patch,x=time,fill=TSTbar),size=5,pch=22, color="grey", stroke=2)+
+  facet_grid(Community~Disp_text)+
+  theme_bw(base_size = 12)+
+  removeGrid()+
+  scale_color_viridis(option = "D",name="Average\ncompartment\nthroughflow")+
+  scale_fill_viridis(option = "D",name="Average\ncompartment\nthroughflow")+
+  ylab("Patch")+
+  xlab("Time")
+ggsave(filename = "./Figures/Figure S7.png",width = 12,height = 8,dpi = 300)
+
 
 #Fig S8####
 Net_ind.df<-Net_ind.df%>%
@@ -449,24 +463,23 @@ Net_ind_long_means<-Net_ind_long%>%
   summarise_each(funs(mean(.,na.rm=T),lower=quantile(.,probs=c(0.25),na.rm=T),upper=quantile(.,probs=c(0.75),na.rm=T)))
 
 Net_ind_long_means<-filter(Net_ind_long_means,Scale=="Local patch")
-Net_ind_long_means<-filter(Net_ind_long_means,Measure=="N" | Measure=="Ltot" | Measure=="LD"| Measure=="Trophic_levels"|Measure=="Cbar"| Measure=="Nestedness")
+Net_ind_long_means<-filter(Net_ind_long_means,Measure=="N" | Measure=="Ltot" | Measure=="LD"| Measure=="Trophic_levels"|Measure=="Cbar"| Measure=="TSTbar")
 
 Net_ind_long_means<-Net_ind_long_means%>%
   mutate(Measure=replace(Measure,Measure=="N","# of species"),
          Measure=replace(Measure,Measure=="Ltot","# of links"),
          Measure=replace(Measure,Measure=="LD","Link density"),
          Measure=replace(Measure,Measure=="Trophic_levels","Trophic levels"),
-         Measure=replace(Measure,Measure=="Cbar","Compartmentalization"))
+         Measure=replace(Measure,Measure=="Cbar","Compartmentalization"),
+         Measure=replace(Measure,Measure=="TSTbar","Average compartment throughflow"))
 
-
-Net_ind_long_means$Measure<-factor(Net_ind_long_means$Measure,levels=c("# of species","# of links","Link density","Nestedness","Compartmentalization","Trophic levels"),ordered = T)
-
+Net_ind_long_means$Measure<-factor(Net_ind_long_means$Measure,levels=c("# of species","# of links","Link density","Compartmentalization","Average compartment throughflow","Trophic levels"),ordered = T)
 
 Net_ind_long_means_3<-Net_ind_long_means%>%
-  filter(Community=="Food web",Dispersal>=0.05)
+  filter(Community=="Food web",Dispersal>=0.1)
 
 Net_ind_long_means<-Net_ind_long_means%>%
-  mutate(Proportion_mean=replace(Proportion_mean,Community=="Food web" & Dispersal>0.05,NA))
+  mutate(Proportion_mean=replace(Proportion_mean,Community=="Food web" & Dispersal>0.1,NA))
 
 ggplot(Net_ind_long_means,aes(x=Dispersal,y=Proportion_mean,color=Community, fill=Community))+
   facet_wrap(~Measure,scales="free_y")+
